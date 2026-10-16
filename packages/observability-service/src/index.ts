@@ -5,17 +5,21 @@ import { KafkaAdminHarvester } from './adminHarvester.js';
 import { PartitionLagEngine } from './lagEngine.js';
 import { TraceCollector, TraceQueryOptions } from './traceCollector.js';
 import { TelemetryBroadcaster } from './telemetryBroadcaster.js';
+import { MetricsExporter } from './metricsExporter.js';
 
 export async function createObservabilityServer(
   harvester: KafkaAdminHarvester,
   lagEngine?: PartitionLagEngine,
   traceCollector?: TraceCollector,
-  broadcaster?: TelemetryBroadcaster
-): Promise<FastifyInstance & { broadcaster: TelemetryBroadcaster }> {
+  broadcaster?: TelemetryBroadcaster,
+  metricsExporter?: MetricsExporter
+): Promise<FastifyInstance & { broadcaster: TelemetryBroadcaster; metricsExporter: MetricsExporter }> {
   const engine = lagEngine || new PartitionLagEngine(harvester.kafkaClient, harvester);
   const collector = traceCollector || new TraceCollector();
   const liveBroadcaster =
     broadcaster || new TelemetryBroadcaster(harvester, engine, collector);
+  const exporter =
+    metricsExporter || new MetricsExporter(harvester, engine, collector);
 
   const fastify = Fastify({ logger: false });
 
@@ -36,6 +40,20 @@ export async function createObservabilityServer(
   // Healthcheck
   fastify.get('/health', async () => {
     return { status: 'ok', service: 'observability-service' };
+  });
+
+  // Prometheus Metrics Exposition
+  fastify.get('/metrics', async (_request, reply) => {
+    try {
+      const metricsText = await exporter.scrapeMetrics();
+      reply.header('Content-Type', exporter.contentType);
+      return reply.send(metricsText);
+    } catch (err) {
+      return reply.status(500).send({
+        error: 'Failed to scrape Prometheus metrics',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
   });
 
   // WebSocket Live Telemetry Stream
@@ -192,8 +210,9 @@ export async function createObservabilityServer(
     }
   });
 
-  // Attach broadcaster reference to instance
+  // Attach references to fastify instance
   (fastify as any).broadcaster = liveBroadcaster;
+  (fastify as any).metricsExporter = exporter;
 
   return fastify as any;
 }
@@ -202,6 +221,7 @@ export * from './adminHarvester.js';
 export * from './lagEngine.js';
 export * from './traceCollector.js';
 export * from './telemetryBroadcaster.js';
+export * from './metricsExporter.js';
 
 const PORT = Number(process.env.PORT) || 3004;
 
@@ -230,7 +250,7 @@ async function start() {
 
   try {
     await server.listen({ port: PORT, host: '0.0.0.0' });
-    console.log(`[ObservabilityService] API & WebSocket running on port ${PORT}`);
+    console.log(`[ObservabilityService] API, Metrics & WebSocket running on port ${PORT}`);
   } catch (err) {
     console.error('[ObservabilityService] Failed to start:', err);
     process.exit(1);
