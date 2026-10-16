@@ -12,6 +12,8 @@
     "test:e2e": "vitest run test/e2e-baseline.test.ts",
     "test:partitioning": "tsx test/partitioning.test.ts",
     "test:manual-commits": "tsx test/manual-commits.test.ts",
+    "test:idempotency": "tsx test/idempotency.test.ts",
+    "test:dlq": "tsx test/dlq-resilience.test.ts",
     "dev:order": "npm run dev -w @streamz/order-service",
     "dev:inventory": "npm run dev -w @streamz/inventory-service",
     "dev:notification": "npm run dev -w @streamz/notification-worker",

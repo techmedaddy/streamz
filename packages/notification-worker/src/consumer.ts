@@ -1,28 +1,36 @@
 import { Consumer } from 'kafkajs';
-import { ResilientKafkaClient } from '@streamz/kafka-client';
+import { ResilientKafkaClient, DlqManager } from '@streamz/kafka-client';
 import {
   TOPICS,
   EventEnvelope,
   OrderConfirmedPayload,
   OrderRejectedPayload,
-  createEventEnvelope,
-  NotificationDlqPayload,
 } from '@streamz/contracts';
 import { NotificationService } from './notificationService.js';
 
 const MAX_RETRIES = 3;
 
+export interface NotificationConsumerOptions {
+  autoCommit?: boolean;
+}
+
 export async function startNotificationWorkerConsumer(
   kafkaClient: ResilientKafkaClient,
-  notificationService: NotificationService
+  notificationService: NotificationService,
+  options: NotificationConsumerOptions = { autoCommit: false }
 ): Promise<Consumer> {
   const consumer = await kafkaClient.createConsumer('notification-worker-group');
   await consumer.subscribe({ topic: TOPICS.ORDER_EVENTS, fromBeginning: false });
 
-  console.log('[NotificationWorker] Subscribed to topic: order-events with group: notification-worker-group');
+  const dlqManager = new DlqManager(kafkaClient);
+  const autoCommit = options.autoCommit ?? false;
+
+  console.log(
+    `[NotificationWorker] Subscribed to topic: order-events with group: notification-worker-group (autoCommit: ${autoCommit})`
+  );
 
   await consumer.run({
-    autoCommit: true,
+    autoCommit,
     eachMessage: async ({ topic, partition, message }) => {
       const rawValue = message.value?.toString();
       const messageKey = message.key?.toString() || null;
@@ -34,12 +42,23 @@ export async function startNotificationWorkerConsumer(
         envelope = JSON.parse(rawValue);
       } catch (parseErr: any) {
         console.error('[NotificationWorker] Poison pill detected (invalid JSON). Routing to DLQ.');
-        await routeToDlq(kafkaClient, topic, messageKey, rawValue, parseErr.message, 0);
+        await dlqManager.sendToDlq({
+          originalTopic: topic,
+          originalKey: messageKey,
+          originalPayload: rawValue,
+          error: parseErr,
+          retryCount: 0,
+        });
+
+        // Commit poison offset so partition is not blocked
+        if (!autoCommit) {
+          await kafkaClient.commitMessageOffset(consumer, topic, partition, message.offset);
+        }
         return;
       }
 
       console.log(
-        `[NotificationWorker] Processing event: ${envelope.eventType} for order: ${envelope.aggregateId} (partition: ${partition}, offset: ${message.offset})`
+        `[NotificationWorker] Ingested event: ${envelope.eventType} for order: ${envelope.aggregateId} (partition: ${partition}, offset: ${message.offset})`
       );
 
       let attempts = 0;
@@ -52,7 +71,11 @@ export async function startNotificationWorkerConsumer(
           } else if (envelope.eventType === 'OrderRejected') {
             await notificationService.handleOrderRejected(envelope as EventEnvelope<OrderRejectedPayload>);
           }
-          // Success!
+
+          // Processing succeeded! Commit offset
+          if (!autoCommit) {
+            await kafkaClient.commitMessageOffset(consumer, topic, partition, message.offset);
+          }
           return;
         } catch (err: any) {
           attempts++;
@@ -69,50 +92,25 @@ export async function startNotificationWorkerConsumer(
         }
       }
 
-      // If all retries exhausted, send to Dead Letter Queue
+      // Max retries exhausted: Quarantine to DLQ and advance offset to prevent pipeline stall
       console.error(
-        `[NotificationWorker] Max retries (${MAX_RETRIES}) exhausted for event ${envelope.eventId}. Sending to DLQ.`
+        `[NotificationWorker] Max retries (${MAX_RETRIES}) exhausted for event ${envelope.eventId}. Routing to DLQ.`
       );
-      await routeToDlq(
-        kafkaClient,
-        topic,
-        messageKey,
-        envelope,
-        lastError?.message || 'Unknown processing error',
-        attempts,
-        lastError?.stack
-      );
+
+      await dlqManager.sendToDlq({
+        originalTopic: topic,
+        originalKey: messageKey,
+        originalPayload: envelope,
+        error: lastError || new Error('Unknown processing failure'),
+        retryCount: attempts,
+      });
+
+      if (!autoCommit) {
+        await kafkaClient.commitMessageOffset(consumer, topic, partition, message.offset);
+        console.log(`[NotificationWorker] Advanced offset past failed message ${message.offset}`);
+      }
     },
   });
 
   return consumer;
-}
-
-async function routeToDlq(
-  kafkaClient: ResilientKafkaClient,
-  originalTopic: string,
-  originalKey: string | null,
-  originalPayload: any,
-  errorMessage: string,
-  retryCount: number,
-  errorStack?: string
-): Promise<void> {
-  const dlqPayload: NotificationDlqPayload = {
-    originalTopic,
-    originalKey,
-    originalPayload,
-    errorMessage,
-    errorStack,
-    retryCount,
-    failedAt: new Date().toISOString(),
-  };
-
-  const dlqEnvelope = createEventEnvelope<NotificationDlqPayload>({
-    eventType: 'NotificationFailed',
-    aggregateId: originalKey || 'unknown',
-    payload: dlqPayload,
-  });
-
-  await kafkaClient.sendEvent(TOPICS.NOTIFICATIONS_DLQ, dlqEnvelope);
-  console.log(`[NotificationWorker] Event routed to ${TOPICS.NOTIFICATIONS_DLQ} with key: ${dlqEnvelope.aggregateId}`);
 }

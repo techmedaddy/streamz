@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { pool } from './db.js';
-import { ResilientKafkaClient } from '@streamz/kafka-client';
+import { ResilientKafkaClient, executeIdempotentTransaction } from '@streamz/kafka-client';
 import {
   TOPICS,
   createEventEnvelope,
@@ -14,21 +14,6 @@ import {
 
 export class OrderService {
   constructor(private kafkaClient: ResilientKafkaClient) {}
-
-  public async isEventProcessed(eventId: string, consumerGroup: string): Promise<boolean> {
-    const res = await pool.query(
-      'SELECT 1 FROM processed_events WHERE event_id = $1 AND consumer_group = $2',
-      [eventId, consumerGroup]
-    );
-    return (res.rowCount ?? 0) > 0;
-  }
-
-  public async markEventProcessed(eventId: string, consumerGroup: string): Promise<void> {
-    await pool.query(
-      'INSERT INTO processed_events (event_id, consumer_group) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-      [eventId, consumerGroup]
-    );
-  }
 
   public async createOrder(data: {
     customerId: string;
@@ -86,28 +71,33 @@ export class OrderService {
   public async handleInventoryReserved(envelope: EventEnvelope<InventoryReservedPayload>) {
     const { orderId } = envelope.payload;
 
-    // Idempotency check
-    if (await this.isEventProcessed(envelope.eventId, 'order-service-group')) {
-      console.log(`[OrderService] Event ${envelope.eventId} already processed, skipping.`);
-      return;
-    }
-
-    const updateRes = await pool.query(
-      `UPDATE orders 
-       SET status = 'CONFIRMED', updated_at = NOW() 
-       WHERE id = $1 AND status = 'PENDING'
-       RETURNING *`,
-      [orderId]
+    // Atomic Idempotent Transaction
+    const idempResult = await executeIdempotentTransaction(
+      pool,
+      envelope.eventId,
+      'order-service-group',
+      async (client) => {
+        const updateRes = await client.query(
+          `UPDATE orders 
+           SET status = 'CONFIRMED', updated_at = NOW() 
+           WHERE id = $1 AND status = 'PENDING'
+           RETURNING *`,
+          [orderId]
+        );
+        return updateRes.rows[0] || null;
+      }
     );
 
-    if (updateRes.rowCount === 0) {
-      console.log(`[OrderService] Order ${orderId} is not in PENDING state, skipping transition.`);
-      await this.markEventProcessed(envelope.eventId, 'order-service-group');
+    if (!idempResult.executed) {
+      console.log(`[OrderService] Duplicate event ${envelope.eventId} skipped via inbox table.`);
       return;
     }
 
-    const order = updateRes.rows[0];
-    await this.markEventProcessed(envelope.eventId, 'order-service-group');
+    const order = idempResult.result;
+    if (!order) {
+      console.log(`[OrderService] Order ${orderId} is not in PENDING state, skipping transition.`);
+      return;
+    }
 
     // Publish OrderConfirmed event
     const confirmedPayload: OrderConfirmedPayload = {
@@ -131,26 +121,32 @@ export class OrderService {
   public async handleInventoryRejected(envelope: EventEnvelope<InventoryRejectedPayload>) {
     const { orderId, reason } = envelope.payload;
 
-    if (await this.isEventProcessed(envelope.eventId, 'order-service-group')) {
-      console.log(`[OrderService] Event ${envelope.eventId} already processed, skipping.`);
-      return;
-    }
-
-    const updateRes = await pool.query(
-      `UPDATE orders 
-       SET status = 'REJECTED', rejection_reason = $2, updated_at = NOW() 
-       WHERE id = $1 AND status = 'PENDING'
-       RETURNING *`,
-      [orderId, reason]
+    // Atomic Idempotent Transaction
+    const idempResult = await executeIdempotentTransaction(
+      pool,
+      envelope.eventId,
+      'order-service-group',
+      async (client) => {
+        const updateRes = await client.query(
+          `UPDATE orders 
+           SET status = 'REJECTED', rejection_reason = $2, updated_at = NOW() 
+           WHERE id = $1 AND status = 'PENDING'
+           RETURNING *`,
+          [orderId, reason]
+        );
+        return updateRes.rows[0] || null;
+      }
     );
 
-    if (updateRes.rowCount === 0) {
-      await this.markEventProcessed(envelope.eventId, 'order-service-group');
+    if (!idempResult.executed) {
+      console.log(`[OrderService] Duplicate event ${envelope.eventId} skipped via inbox table.`);
       return;
     }
 
-    const order = updateRes.rows[0];
-    await this.markEventProcessed(envelope.eventId, 'order-service-group');
+    const order = idempResult.result;
+    if (!order) {
+      return;
+    }
 
     // Publish OrderRejected event
     const rejectedPayload: OrderRejectedPayload = {

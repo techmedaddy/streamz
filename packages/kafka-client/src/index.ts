@@ -1,6 +1,9 @@
 import { Kafka, logLevel, Producer, Consumer, EachMessagePayload, Admin, Partitioners } from 'kafkajs';
 import { EventEnvelope } from '@streamz/contracts';
 
+export * from './idempotency.js';
+export * from './dlq.js';
+
 export interface KafkaConfigOptions {
   clientId: string;
   brokers?: string[];
