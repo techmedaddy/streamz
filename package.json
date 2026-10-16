@@ -25,6 +25,9 @@
     "dev:notification": "npm run dev -w @streamz/notification-worker",
     "dev:observability": "npm run dev -w @streamz/observability-service",
     "dev:dashboard": "npm run dev -w @streamz/dashboard-ui",
+    "dev:backend": "concurrently -n \"order,inventory,notification,observability\" -c \"magenta,cyan,blue,green\" \"npm run dev:order\" \"npm run dev:inventory\" \"npm run dev:notification\" \"npm run dev:observability\"",
+    "dev:all": "concurrently -n \"order,inventory,notification,observability,dashboard\" -c \"magenta,cyan,blue,green,yellow\" \"npm run dev:order\" \"npm run dev:inventory\" \"npm run dev:notification\" \"npm run dev:observability\" \"npm run dev:dashboard\"",
+    "dev": "npm run dev:all",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f"
@@ -32,6 +35,7 @@
   "devDependencies": {
     "@types/node": "^22.10.1",
     "@types/ws": "^8.18.2",
+    "concurrently": "^10.0.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useTelemetryStream } from '../hooks/useTelemetryStream';
+import { TopologyCanvas } from '../components/topology/TopologyCanvas';
+import { LagHeatmapView } from '../components/lag/LagHeatmapView';
 
 export default function DashboardHome() {
   const [activeTab, setActiveTab] = useState<'topology' | 'lag' | 'traces' | 'chaos'>('topology');
@@ -83,6 +85,15 @@ export default function DashboardHome() {
               <span className="badge badge-indigo">
                 Cluster ID: {cluster?.clusterId || 'Detecting...'}
               </span>
+            </div>
+
+            {/* Interactive Live Topology Flow Canvas */}
+            <div style={{ marginBottom: '28px' }}>
+              <TopologyCanvas
+                cluster={cluster}
+                lagSummaries={lagSummaries}
+                recentSpans={recentSpans}
+              />
             </div>
 
             {/* Broker Nodes Grid */}
@@ -233,94 +244,7 @@ export default function DashboardHome() {
         {/* TAB 2: CONSUMER GROUP LAG */}
         {activeTab === 'lag' && (
           <section id="view-lag">
-            <div style={{ marginBottom: '24px' }}>
-              <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
-                Consumer Groups & Partition Lag Monitor
-              </h1>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                Real-time offset lag calculation (High Watermark - Committed Offset) and stalled worker detection.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gap: '20px' }}>
-              {lagSummaries.map((group) => (
-                <div key={group.groupId} className="glass-panel" style={{ padding: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '8px',
-                          background: group.isStalled ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: `1px solid ${group.isStalled ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
-                        }}
-                      >
-                        <Activity size={18} color={group.isStalled ? '#f87171' : '#34d399'} />
-                      </div>
-                      <div>
-                        <h2 style={{ fontSize: '15px', fontWeight: 600, fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
-                          {group.groupId}
-                        </h2>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          State: <strong style={{ color: '#ffffff' }}>{group.state}</strong> • Active Members: {group.membersCount}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {group.isStalled && (
-                        <span className="badge badge-crimson">
-                          <AlertCircle size={12} /> Stalled / Unassigned Lag
-                        </span>
-                      )}
-                      <span className={group.totalLag > 0 ? 'badge badge-amber' : 'badge badge-emerald'}>
-                        Total Lag: {group.totalLag} messages
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Partition breakdown */}
-                  {group.topics.map((t) => (
-                    <div key={t.topic} style={{ background: 'rgba(0, 0, 0, 0.25)', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '12px' }}>
-                        <span style={{ fontWeight: 600, color: '#ffffff' }}>Topic: {t.topic}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>Topic Lag: {t.topicLag} msg</span>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                        {t.partitions.map((p) => (
-                          <div
-                            key={p.partition}
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.03)',
-                              borderRadius: '6px',
-                              padding: '12px',
-                              border: p.lag > 0 ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid var(--border-subtle)',
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px' }}>
-                              <span style={{ fontWeight: 600, color: '#ffffff' }}>Partition {p.partition}</span>
-                              <span style={{ color: p.lag > 0 ? '#fbbf24' : '#34d399', fontWeight: 700 }}>
-                                Lag: {p.lag}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                              <div>Log-End: {p.logEndOffset}</div>
-                              <div>Committed: {p.committedOffset}</div>
-                              <div>Assigned: {p.isAssigned ? '✓ Yes' : '✗ Unassigned'}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+            <LagHeatmapView lagSummaries={lagSummaries} cluster={cluster} />
           </section>
         )}
 
