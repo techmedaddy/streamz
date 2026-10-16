@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { pool } from './db.js';
-import { executeIdempotentTransaction } from '@streamz/kafka-client';
+import { executeIdempotentTransaction, ResilientKafkaClient, EventTracer } from '@streamz/kafka-client';
 import {
   EventEnvelope,
   OrderConfirmedPayload,
@@ -8,6 +8,13 @@ import {
 } from '@streamz/contracts';
 
 export class NotificationService {
+  private tracer?: EventTracer;
+
+  constructor(kafkaClient?: ResilientKafkaClient) {
+    if (kafkaClient) {
+      this.tracer = new EventTracer(kafkaClient, 'notification-worker');
+    }
+  }
   public async listNotifications() {
     const res = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50');
     return res.rows;
@@ -51,6 +58,16 @@ export class NotificationService {
       return;
     }
 
+    if (this.tracer) {
+      await this.tracer.recordSpan({
+        correlationId: envelope.correlationId,
+        aggregateId: orderId,
+        eventType: 'OrderConfirmed',
+        stage: 'PROCESSED',
+        metadata: { notificationId: notifId, status: 'SENT' },
+      });
+    }
+
     console.log(`[NotificationService] Created ORDER_CONFIRMED notification ${notifId} for ${orderId}`);
   }
 
@@ -85,6 +102,16 @@ export class NotificationService {
     if (!idempResult.executed) {
       console.log(`[NotificationService] Duplicate event ${envelope.eventId} skipped via inbox table.`);
       return;
+    }
+
+    if (this.tracer) {
+      await this.tracer.recordSpan({
+        correlationId: envelope.correlationId,
+        aggregateId: orderId,
+        eventType: 'OrderRejected',
+        stage: 'PROCESSED',
+        metadata: { notificationId: notifId, status: 'SENT', reason },
+      });
     }
 
     console.log(`[NotificationService] Created ORDER_REJECTED notification ${notifId} for ${orderId}`);

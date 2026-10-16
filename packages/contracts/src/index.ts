@@ -1,6 +1,7 @@
 export * from './topics.js';
 export * from './envelope.js';
 export * from './events.js';
+export * from './telemetry.js';
 
 // Helper to determine partition key
 export function getEventPartitionKey(envelope: { aggregateId: string }): string {

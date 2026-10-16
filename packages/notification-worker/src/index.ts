@@ -11,7 +11,7 @@ const kafkaClient = new ResilientKafkaClient({
   brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
 });
 
-const notificationService = new NotificationService();
+const notificationService = new NotificationService(kafkaClient);
 
 // Healthcheck
 fastify.get('/health', async () => {

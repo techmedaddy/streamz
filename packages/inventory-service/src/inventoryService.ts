@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { pool } from './db.js';
-import { ResilientKafkaClient } from '@streamz/kafka-client';
+import { ResilientKafkaClient, EventTracer } from '@streamz/kafka-client';
 import {
   TOPICS,
   createEventEnvelope,
@@ -11,7 +11,11 @@ import {
 } from '@streamz/contracts';
 
 export class InventoryService {
-  constructor(private kafkaClient: ResilientKafkaClient) {}
+  private tracer: EventTracer;
+
+  constructor(private kafkaClient: ResilientKafkaClient) {
+    this.tracer = new EventTracer(kafkaClient, 'inventory-service');
+  }
 
   public async listProducts() {
     const res = await pool.query('SELECT * FROM products ORDER BY name ASC');
@@ -31,6 +35,7 @@ export class InventoryService {
   public async processOrderCreated(envelope: EventEnvelope<OrderCreatedPayload>): Promise<void> {
     const { orderId, productId, quantity } = envelope.payload;
     const consumerGroup = 'inventory-service-group';
+    const startTime = Date.now();
 
     const client = await pool.connect();
     try {
@@ -81,6 +86,14 @@ export class InventoryService {
         });
 
         await this.kafkaClient.sendEvent(TOPICS.INVENTORY_EVENTS, rejectedEnvelope);
+        await this.tracer.recordSpan({
+          correlationId: envelope.correlationId,
+          aggregateId: orderId,
+          eventType: 'InventoryRejected',
+          stage: 'FAILED',
+          durationMs: Date.now() - startTime,
+          metadata: { productId, reason: rejectedPayload.reason },
+        });
         console.log(`[InventoryService] Rejected order ${orderId}: product not found.`);
         return;
       }
@@ -125,6 +138,14 @@ export class InventoryService {
         });
 
         await this.kafkaClient.sendEvent(TOPICS.INVENTORY_EVENTS, reservedEnvelope);
+        await this.tracer.recordSpan({
+          correlationId: envelope.correlationId,
+          aggregateId: orderId,
+          eventType: 'InventoryReserved',
+          stage: 'PROCESSED',
+          durationMs: Date.now() - startTime,
+          metadata: { productId, quantity, reservationId },
+        });
         console.log(
           `[InventoryService] Reserved ${quantity} of ${product.sku} for order ${orderId} (remaining available: ${availableStock - quantity})`
         );
@@ -150,6 +171,14 @@ export class InventoryService {
         });
 
         await this.kafkaClient.sendEvent(TOPICS.INVENTORY_EVENTS, rejectedEnvelope);
+        await this.tracer.recordSpan({
+          correlationId: envelope.correlationId,
+          aggregateId: orderId,
+          eventType: 'InventoryRejected',
+          stage: 'PROCESSED',
+          durationMs: Date.now() - startTime,
+          metadata: { productId, requestedQuantity: quantity, reason },
+        });
         console.log(`[InventoryService] Rejected order ${orderId}: ${reason}`);
       }
     } catch (err) {

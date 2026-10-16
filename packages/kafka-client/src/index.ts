@@ -3,6 +3,7 @@ import { EventEnvelope } from '@streamz/contracts';
 
 export * from './idempotency.js';
 export * from './dlq.js';
+export * from './tracer.js';
 
 export interface KafkaConfigOptions {
   clientId: string;

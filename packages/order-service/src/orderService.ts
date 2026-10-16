@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { pool } from './db.js';
-import { ResilientKafkaClient, executeIdempotentTransaction } from '@streamz/kafka-client';
+import { ResilientKafkaClient, executeIdempotentTransaction, EventTracer } from '@streamz/kafka-client';
 import {
   TOPICS,
   createEventEnvelope,
@@ -13,7 +13,11 @@ import {
 } from '@streamz/contracts';
 
 export class OrderService {
-  constructor(private kafkaClient: ResilientKafkaClient) {}
+  private tracer: EventTracer;
+
+  constructor(private kafkaClient: ResilientKafkaClient) {
+    this.tracer = new EventTracer(kafkaClient, 'order-service');
+  }
 
   public async createOrder(data: {
     customerId: string;
@@ -53,6 +57,18 @@ export class OrderService {
     });
 
     await this.kafkaClient.sendEvent(TOPICS.ORDERS, envelope);
+    await this.tracer.recordSpan({
+      correlationId,
+      aggregateId: orderId,
+      eventType: 'OrderCreated',
+      stage: 'PRODUCED',
+      metadata: {
+        customerId: data.customerId,
+        productId: data.productId,
+        quantity: data.quantity,
+        totalPrice: totalAmount,
+      },
+    });
     console.log(`[OrderService] Published OrderCreated for ${orderId} (correlation: ${correlationId})`);
 
     return order;
@@ -115,6 +131,13 @@ export class OrderService {
     });
 
     await this.kafkaClient.sendEvent(TOPICS.ORDER_EVENTS, confirmedEnvelope);
+    await this.tracer.recordSpan({
+      correlationId: envelope.correlationId,
+      aggregateId: orderId,
+      eventType: 'OrderConfirmed',
+      stage: 'PROCESSED',
+      metadata: { status: 'CONFIRMED', totalPrice: Number(order.total_amount) },
+    });
     console.log(`[OrderService] Order ${orderId} CONFIRMED and OrderConfirmed event published.`);
   }
 
@@ -164,6 +187,13 @@ export class OrderService {
     });
 
     await this.kafkaClient.sendEvent(TOPICS.ORDER_EVENTS, rejectedEnvelope);
+    await this.tracer.recordSpan({
+      correlationId: envelope.correlationId,
+      aggregateId: orderId,
+      eventType: 'OrderRejected',
+      stage: 'PROCESSED',
+      metadata: { status: 'REJECTED', reason },
+    });
     console.log(`[OrderService] Order ${orderId} REJECTED (${reason}) and OrderRejected event published.`);
   }
 }

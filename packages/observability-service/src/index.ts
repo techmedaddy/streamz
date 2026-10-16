@@ -2,12 +2,15 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { ResilientKafkaClient } from '@streamz/kafka-client';
 import { KafkaAdminHarvester } from './adminHarvester.js';
 import { PartitionLagEngine } from './lagEngine.js';
+import { TraceCollector, TraceQueryOptions } from './traceCollector.js';
 
 export function createObservabilityServer(
   harvester: KafkaAdminHarvester,
-  lagEngine?: PartitionLagEngine
+  lagEngine?: PartitionLagEngine,
+  traceCollector?: TraceCollector
 ): FastifyInstance {
   const engine = lagEngine || new PartitionLagEngine(harvester.kafkaClient, harvester);
+  const collector = traceCollector || new TraceCollector();
   const fastify = Fastify({ logger: false });
 
   // CORS headers
@@ -130,11 +133,56 @@ export function createObservabilityServer(
     }
   });
 
+  // List Traces
+  fastify.get('/api/traces', async (request, reply) => {
+    const query = request.query as {
+      limit?: string;
+      offset?: string;
+      service?: string;
+      status?: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+      search?: string;
+    };
+
+    const options: TraceQueryOptions = {
+      limit: query.limit ? Number(query.limit) : undefined,
+      offset: query.offset ? Number(query.offset) : undefined,
+      service: query.service,
+      status: query.status,
+      search: query.search,
+    };
+
+    return reply.send(collector.getTraces(options));
+  });
+
+  // Single Trace by Correlation ID
+  fastify.get('/api/traces/:correlationId', async (request, reply) => {
+    const { correlationId } = request.params as { correlationId: string };
+    const trace = collector.getTrace(correlationId);
+    if (!trace) {
+      return reply.status(404).send({ error: `Trace '${correlationId}' not found` });
+    }
+    return reply.send(trace);
+  });
+
+  // Direct Ingest Trace Span
+  fastify.post('/api/traces', async (request, reply) => {
+    try {
+      const span = collector.recordSpan(request.body);
+      return reply.status(201).send(span);
+    } catch (err) {
+      return reply.status(400).send({
+        error: 'Invalid trace span payload',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+
   return fastify;
 }
 
 export * from './adminHarvester.js';
 export * from './lagEngine.js';
+export * from './traceCollector.js';
 
 const PORT = Number(process.env.PORT) || 3004;
 
@@ -146,7 +194,17 @@ async function start() {
 
   const harvester = new KafkaAdminHarvester(kafkaClient);
   const lagEngine = new PartitionLagEngine(kafkaClient, harvester);
-  const server = createObservabilityServer(harvester, lagEngine);
+  const traceCollector = new TraceCollector();
+
+  // Start background Kafka telemetry consumer
+  try {
+    await traceCollector.startConsumer(kafkaClient);
+    console.log('[ObservabilityService] Telemetry trace consumer started');
+  } catch (err) {
+    console.warn('[ObservabilityService] Telemetry consumer initialization note:', err);
+  }
+
+  const server = createObservabilityServer(harvester, lagEngine, traceCollector);
 
   try {
     await server.listen({ port: PORT, host: '0.0.0.0' });
