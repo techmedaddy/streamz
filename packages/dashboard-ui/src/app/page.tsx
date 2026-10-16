@@ -19,6 +19,7 @@ import { useTelemetryStream } from '../hooks/useTelemetryStream';
 import { TopologyCanvas } from '../components/topology/TopologyCanvas';
 import { LagHeatmapView } from '../components/lag/LagHeatmapView';
 import { TraceExplorerView } from '../components/traces/TraceExplorerView';
+import { ChaosControlView } from '../components/chaos/ChaosControlView';
 
 export default function DashboardHome() {
   const [activeTab, setActiveTab] = useState<'topology' | 'lag' | 'traces' | 'chaos'>('topology');
@@ -259,61 +260,7 @@ export default function DashboardHome() {
         {/* TAB 4: CHAOS CONTROL */}
         {activeTab === 'chaos' && (
           <section id="view-chaos">
-            <div style={{ marginBottom: '24px' }}>
-              <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
-                Chaos & Failure Resilience Control Center
-              </h1>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                Inject controlled failures, trigger consumer group rebalances, simulate message bursts, and test DLQ recovery.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-              <div className="glass-panel" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <Zap size={18} color="#818cf8" />
-                  <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#ffffff' }}>Lag Buildup Burst Generator</h2>
-                </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '18px' }}>
-                  Pumps a high-volume burst of 100 messages into the orders topic across all 3 partitions to test drain capacity.
-                </p>
-                <button
-                  id="btn-trigger-burst"
-                  className="btn btn-primary"
-                  onClick={async () => {
-                    try {
-                      await fetch('http://localhost:3001/orders', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          customerId: 'chaos-tester',
-                          productId: 'prod-mouse-wireless',
-                          quantity: 1,
-                        }),
-                      });
-                      alert('Dispatched test order!');
-                    } catch (e: any) {
-                      alert(`Order dispatch note: ${e.message}`);
-                    }
-                  }}
-                >
-                  <ArrowUpRight size={14} /> Dispatch Test Order
-                </button>
-              </div>
-
-              <div className="glass-panel" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <AlertCircle size={18} color="#f87171" />
-                  <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#ffffff' }}>Poison Pill DLQ Injection</h2>
-                </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '18px' }}>
-                  Injects an intentionally toxic payload to verify DLQ quarantine and non-blocking retry mechanics.
-                </p>
-                <button id="btn-trigger-dlq" className="btn btn-danger">
-                  Inject Poison Pill
-                </button>
-              </div>
-            </div>
+            <ChaosControlView />
           </section>
         )}
       </main>
