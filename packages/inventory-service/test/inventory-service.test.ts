@@ -5,15 +5,13 @@ import {
   TOPICS,
   createEventEnvelope,
   OrderCreatedPayload,
-  InventoryReservedPayload,
-  InventoryRejectedPayload,
 } from '@streamz/contracts';
 
-async function verifySubphase2_3() {
-  console.log('--- Verifying Sub-phase 2.3: Inventory Service (Reservation & Concurrency Guard) ---');
+async function testInventoryReservation() {
+  console.log('--- Testing Inventory Service (Stock Reservation & Concurrency Guard) ---');
 
   const kafkaClient = new ResilientKafkaClient({
-    clientId: 'verify-subphase-2-3',
+    clientId: 'inventory-test-client',
     brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
   });
 
@@ -21,7 +19,7 @@ async function verifySubphase2_3() {
   const productId = 'prod-monitor-4k'; // Initial stock is 5
 
   // 1. Setup consumer to intercept events on inventory-events topic
-  const consumer = await kafkaClient.createConsumer(`verify-inv-${Date.now()}`);
+  const consumer = await kafkaClient.createConsumer(`test-inv-${Date.now()}`);
   await consumer.subscribe({ topic: TOPICS.INVENTORY_EVENTS, fromBeginning: true });
 
   const capturedEvents: any[] = [];
@@ -32,7 +30,6 @@ async function verifySubphase2_3() {
     },
   });
 
-  // Wait briefly for consumer to establish partition assignment
   await new Promise((r) => setTimeout(r, 2000));
 
   // 2. Scenario 1: Successful Stock Reservation (request 2 units of 5)
@@ -41,10 +38,10 @@ async function verifySubphase2_3() {
   const envelope1 = createEventEnvelope<OrderCreatedPayload>({
     eventType: 'OrderCreated',
     aggregateId: orderId1,
-    correlationId: 'corr-subphase-2-3-a',
+    correlationId: 'corr-test-inv-a',
     payload: {
       orderId: orderId1,
-      customerId: 'cust-verify-2-3',
+      customerId: 'cust-verify-inv',
       productId,
       quantity: 2,
       totalPrice: 999.98,
@@ -53,7 +50,6 @@ async function verifySubphase2_3() {
 
   await inventoryService.processOrderCreated(envelope1);
 
-  // Verify DB state
   const productAfter1 = await inventoryService.getProduct(productId);
   console.log(`Product stock: ${productAfter1.stock_quantity}, reserved: ${productAfter1.reserved_quantity}`);
   if (Number(productAfter1.reserved_quantity) !== 2) {
@@ -67,10 +63,10 @@ async function verifySubphase2_3() {
   const envelope2 = createEventEnvelope<OrderCreatedPayload>({
     eventType: 'OrderCreated',
     aggregateId: orderId2,
-    correlationId: 'corr-subphase-2-3-b',
+    correlationId: 'corr-test-inv-b',
     payload: {
       orderId: orderId2,
-      customerId: 'cust-verify-2-3',
+      customerId: 'cust-verify-inv',
       productId,
       quantity: 10,
       totalPrice: 4999.90,
@@ -97,7 +93,6 @@ async function verifySubphase2_3() {
 
   // 5. Verify Kafka events on inventory-events topic
   console.log('\nVerifying Kafka events published to "inventory-events"...');
-  // Wait up to 5 seconds for both events to arrive
   const startWait = Date.now();
   while (capturedEvents.length < 2 && Date.now() - startWait < 5000) {
     await new Promise((r) => setTimeout(r, 200));
@@ -126,7 +121,7 @@ async function verifySubphase2_3() {
     availableQuantity: rejectedEvent.payload.availableQuantity,
   });
 
-  // Cleanup test reservations to reset stock
+  // Cleanup
   await pool.query('UPDATE products SET reserved_quantity = 0 WHERE id = $1', [productId]);
   await pool.query('DELETE FROM reservations WHERE order_id IN ($1, $2)', [orderId1, orderId2]);
   await pool.query('DELETE FROM processed_events WHERE event_id IN ($1, $2)', [envelope1.eventId, envelope2.eventId]);
@@ -135,11 +130,11 @@ async function verifySubphase2_3() {
   await kafkaClient.disconnectAll();
   await pool.end();
 
-  console.log('\n--- Sub-phase 2.3 Verification Complete and 100% Successful! ---');
+  console.log('\n--- Inventory Service Verification Complete and Successful! ---');
   process.exit(0);
 }
 
-verifySubphase2_3().catch((err) => {
+testInventoryReservation().catch((err) => {
   console.error('Verification failed:', err);
   process.exit(1);
 });

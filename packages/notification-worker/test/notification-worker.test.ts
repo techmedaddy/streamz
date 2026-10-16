@@ -9,11 +9,11 @@ import {
   OrderRejectedPayload,
 } from '@streamz/contracts';
 
-async function verifySubphase2_5() {
-  console.log('--- Verifying Sub-phase 2.5: Notification Worker Service ---');
+async function testNotificationWorker() {
+  console.log('--- Testing Notification Worker Service (Events, Retries & DLQ) ---');
 
   const kafkaClient = new ResilientKafkaClient({
-    clientId: 'verify-subphase-2-5',
+    clientId: 'notification-worker-test-client',
     brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
   });
 
@@ -23,7 +23,7 @@ async function verifySubphase2_5() {
   const workerConsumer = await startNotificationWorkerConsumer(kafkaClient, notificationService);
 
   // 2. Setup a test consumer listening to `notifications-dlq` topic
-  const dlqConsumer = await kafkaClient.createConsumer(`verify-dlq-${Date.now()}`);
+  const dlqConsumer = await kafkaClient.createConsumer(`test-dlq-${Date.now()}`);
   await dlqConsumer.subscribe({ topic: TOPICS.NOTIFICATIONS_DLQ, fromBeginning: false });
 
   const dlqMessages: any[] = [];
@@ -55,7 +55,6 @@ async function verifySubphase2_5() {
   await kafkaClient.sendEvent(TOPICS.ORDER_EVENTS, confirmedEnvelope);
   console.log(`Published OrderConfirmed event for: ${orderId1}`);
 
-  // Poll database for notification record
   let notif1: any = null;
   for (let i = 0; i < 20; i++) {
     const records = await notificationService.getNotificationsForOrder(orderId1);
@@ -134,7 +133,6 @@ async function verifySubphase2_5() {
   // --- Scenario 4: Poison Pill / DLQ Routing ---
   console.log('\n[Scenario 4] Testing Poison Pill / Dead Letter Queue (DLQ) Routing...');
   const producer = await kafkaClient.getProducer();
-  // Send an invalid non-JSON poison payload directly to order-events
   await producer.send({
     topic: TOPICS.ORDER_EVENTS,
     messages: [
@@ -146,7 +144,6 @@ async function verifySubphase2_5() {
   });
   console.log('Sent malformed payload to order-events topic.');
 
-  // Wait for it to be routed to DLQ
   for (let i = 0; i < 20 && dlqMessages.length === 0; i++) {
     await new Promise((r) => setTimeout(r, 300));
   }
@@ -172,11 +169,11 @@ async function verifySubphase2_5() {
   await kafkaClient.disconnectAll();
   await pool.end();
 
-  console.log('\n--- Sub-phase 2.5 Verification Complete and 100% Successful! ---');
+  console.log('\n--- Notification Worker Verification Complete and Successful! ---');
   process.exit(0);
 }
 
-verifySubphase2_5().catch((err) => {
+testNotificationWorker().catch((err) => {
   console.error('Verification failed:', err);
   process.exit(1);
 });

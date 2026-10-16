@@ -1,4 +1,4 @@
-import { Kafka, logLevel, Producer, Consumer, EachMessagePayload, Admin } from 'kafkajs';
+import { Kafka, logLevel, Producer, Consumer, EachMessagePayload, Admin, Partitioners } from 'kafkajs';
 import { EventEnvelope } from '@streamz/contracts';
 
 export interface KafkaConfigOptions {
@@ -33,6 +33,7 @@ export class ResilientKafkaClient {
   public async getProducer(): Promise<Producer> {
     if (!this.producer) {
       this.producer = this.kafka.producer({
+        createPartitioner: Partitioners.DefaultPartitioner,
         allowAutoTopicCreation: true,
         idempotent: true, // Kafka producer idempotence
       });
@@ -81,6 +82,34 @@ export class ResilientKafkaClient {
     await consumer.connect();
     this.consumers.push(consumer);
     return consumer;
+  }
+
+  public async commitMessageOffset(
+    consumer: Consumer,
+    topic: string,
+    partition: number,
+    offset: string
+  ): Promise<void> {
+    const nextOffset = (BigInt(offset) + 1n).toString();
+    await consumer.commitOffsets([
+      {
+        topic,
+        partition,
+        offset: nextOffset,
+      },
+    ]);
+  }
+
+  public async fetchCommittedOffset(
+    groupId: string,
+    topic: string,
+    partition: number
+  ): Promise<string | null> {
+    const admin = await this.getAdmin();
+    const offsets = await admin.fetchOffsets({ groupId, topics: [topic] });
+    const topicOffsets = offsets.find((o) => o.topic === topic);
+    const partitionOffset = topicOffsets?.partitions.find((p) => p.partition === partition);
+    return partitionOffset?.offset ?? null;
   }
 
   public async disconnectAll(): Promise<void> {

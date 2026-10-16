@@ -12,7 +12,7 @@ import { NotificationService } from '../packages/notification-worker/src/notific
 import { startNotificationWorkerConsumer } from '../packages/notification-worker/src/consumer.js';
 import { pool as notificationsPool } from '../packages/notification-worker/src/db.js';
 
-describe('Phase 2.6: End-to-End Baseline Integration Choreography', () => {
+describe('End-to-End Baseline Integration Choreography', () => {
   let kafkaClient: ResilientKafkaClient;
   let orderService: OrderService;
   let inventoryService: InventoryService;

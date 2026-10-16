@@ -3,11 +3,11 @@ import { ResilientKafkaClient } from '@streamz/kafka-client';
 import { OrderService } from '../src/orderService.js';
 import { TOPICS } from '@streamz/contracts';
 
-async function verifySubphase2_2() {
-  console.log('--- Verifying Sub-phase 2.2: Order Service (POST /orders & Event Emitter) ---');
+async function testOrderCreation() {
+  console.log('--- Testing Order Service (Order Creation & Kafka Event Publishing) ---');
 
   const kafkaClient = new ResilientKafkaClient({
-    clientId: 'verify-subphase-2-2',
+    clientId: 'order-service-test-client',
     brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
   });
 
@@ -16,7 +16,7 @@ async function verifySubphase2_2() {
   // 1. Create order in OrderService
   console.log('Creating test order...');
   const order = await orderService.createOrder({
-    customerId: 'cust-verify-subphase-2-2',
+    customerId: 'customer-test-01',
     productId: 'prod-keyboard-rgb',
     quantity: 1,
     unitPrice: 99.99,
@@ -38,7 +38,7 @@ async function verifySubphase2_2() {
 
   // 3. Verify event on Kafka
   console.log('Verifying event delivery on Kafka "orders" topic...');
-  const consumer = await kafkaClient.createConsumer(`verify-group-${Date.now()}`);
+  const consumer = await kafkaClient.createConsumer(`test-order-group-${Date.now()}`);
   await consumer.subscribe({ topic: TOPICS.ORDERS, fromBeginning: true });
 
   let capturedEvent: any = null;
@@ -72,11 +72,11 @@ async function verifySubphase2_2() {
   await kafkaClient.disconnectAll();
   await pool.end();
 
-  console.log('--- Sub-phase 2.2 Verification Complete and 100% Successful! ---');
+  console.log('--- Order Service Verification Complete and Successful! ---');
   process.exit(0);
 }
 
-verifySubphase2_2().catch((err) => {
+testOrderCreation().catch((err) => {
   console.error('Verification failed:', err);
   process.exit(1);
 });

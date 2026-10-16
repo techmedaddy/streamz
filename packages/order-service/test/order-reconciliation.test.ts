@@ -9,11 +9,11 @@ import {
   InventoryRejectedPayload,
 } from '@streamz/contracts';
 
-async function verifySubphase2_4() {
-  console.log('--- Verifying Sub-phase 2.4: Order Status Reconciliation Consumer ---');
+async function testOrderReconciliation() {
+  console.log('--- Testing Order Status Reconciliation Consumer ---');
 
   const kafkaClient = new ResilientKafkaClient({
-    clientId: 'verify-subphase-2-4',
+    clientId: 'order-reconciliation-test-client',
     brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
   });
 
@@ -23,7 +23,7 @@ async function verifySubphase2_4() {
   const orderConsumer = await startOrderServiceConsumer(kafkaClient, orderService);
 
   // 2. Setup a test consumer listening to `order-events` topic
-  const testConsumer = await kafkaClient.createConsumer(`verify-order-events-${Date.now()}`);
+  const testConsumer = await kafkaClient.createConsumer(`test-order-events-${Date.now()}`);
   await testConsumer.subscribe({ topic: TOPICS.ORDER_EVENTS, fromBeginning: false });
 
   const orderEvents: any[] = [];
@@ -34,7 +34,6 @@ async function verifySubphase2_4() {
     },
   });
 
-  // Give consumers time to join consumer groups
   console.log('Waiting for consumer groups to stabilize...');
   await new Promise((r) => setTimeout(r, 4000));
 
@@ -163,7 +162,6 @@ async function verifySubphase2_4() {
   // --- Scenario 4: Idempotency Protection ---
   console.log('\n[Scenario 4] Testing Idempotent Reconciliation Guard...');
   const orderEventsCountBefore = orderEvents.length;
-  // Re-publish the reserved event
   await kafkaClient.sendEvent(TOPICS.INVENTORY_EVENTS, reservedEnvelope);
   await new Promise((r) => setTimeout(r, 1500));
 
@@ -185,11 +183,11 @@ async function verifySubphase2_4() {
   await kafkaClient.disconnectAll();
   await pool.end();
 
-  console.log('\n--- Sub-phase 2.4 Verification Complete and 100% Successful! ---');
+  console.log('\n--- Order Status Reconciliation Test Complete and Successful! ---');
   process.exit(0);
 }
 
-verifySubphase2_4().catch((err) => {
+testOrderReconciliation().catch((err) => {
   console.error('Verification failed:', err);
   process.exit(1);
 });
