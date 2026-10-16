@@ -18,6 +18,7 @@ import { Header } from '../components/Header';
 import { useTelemetryStream } from '../hooks/useTelemetryStream';
 import { TopologyCanvas } from '../components/topology/TopologyCanvas';
 import { LagHeatmapView } from '../components/lag/LagHeatmapView';
+import { TraceExplorerView } from '../components/traces/TraceExplorerView';
 
 export default function DashboardHome() {
   const [activeTab, setActiveTab] = useState<'topology' | 'lag' | 'traces' | 'chaos'>('topology');
@@ -251,99 +252,7 @@ export default function DashboardHome() {
         {/* TAB 3: LIVE TRACES */}
         {activeTab === 'traces' && (
           <section id="view-traces">
-            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
-                  Live Distributed Event Tracing Stream
-                </h1>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Asynchronous correlation tracking cross-service event choreography in real time.
-                </p>
-              </div>
-              <span className="badge badge-emerald">
-                <span className="pulse-emerald" style={{ width: '6px', height: '6px' }} />
-                Real-Time Pulse Active
-              </span>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '12px 16px' }}>Timestamp</th>
-                      <th style={{ padding: '12px 16px' }}>Service</th>
-                      <th style={{ padding: '12px 16px' }}>Event Type</th>
-                      <th style={{ padding: '12px 16px' }}>Stage</th>
-                      <th style={{ padding: '12px 16px' }}>Duration</th>
-                      <th style={{ padding: '12px 16px' }}>Correlation ID</th>
-                      <th style={{ padding: '12px 16px' }}>Aggregate / Order</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentSpans.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                          Listening for event spans... Trigger orders or tests to see live events stream across the wire.
-                        </td>
-                      </tr>
-                    ) : (
-                      recentSpans.map((span) => (
-                        <tr
-                          key={span.spanId}
-                          style={{
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                            transition: 'background 0.15s ease',
-                          }}
-                        >
-                          <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>
-                            {new Date(span.timestamp).toLocaleTimeString()}
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <span
-                              className={
-                                span.service === 'order-service'
-                                  ? 'badge badge-indigo'
-                                  : span.service === 'inventory-service'
-                                  ? 'badge badge-emerald'
-                                  : 'badge badge-amber'
-                              }
-                            >
-                              {span.service}
-                            </span>
-                          </td>
-                          <td style={{ padding: '14px 16px', fontWeight: 600, color: '#ffffff' }}>
-                            {span.eventType}
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <span
-                              className={
-                                span.stage === 'PROCESSED'
-                                  ? 'badge badge-emerald'
-                                  : span.stage === 'FAILED'
-                                  ? 'badge badge-crimson'
-                                  : 'badge badge-cyan'
-                              }
-                            >
-                              {span.stage}
-                            </span>
-                          </td>
-                          <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>
-                            {span.durationMs ? `${span.durationMs}ms` : '-'}
-                          </td>
-                          <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {span.correlationId}
-                          </td>
-                          <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: '#ffffff' }}>
-                            {span.aggregateId}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <TraceExplorerView recentSpans={recentSpans} />
           </section>
         )}
 
