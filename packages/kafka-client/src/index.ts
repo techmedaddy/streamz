@@ -75,11 +75,14 @@ export class ResilientKafkaClient {
     });
   }
 
-  public async createConsumer(groupId: string): Promise<Consumer> {
+  public async createConsumer(
+    groupId: string,
+    options?: { sessionTimeout?: number; heartbeatInterval?: number }
+  ): Promise<Consumer> {
     const consumer = this.kafka.consumer({
       groupId,
-      sessionTimeout: 30000,
-      heartbeatInterval: 3000,
+      sessionTimeout: options?.sessionTimeout ?? 30000,
+      heartbeatInterval: options?.heartbeatInterval ?? 3000,
       allowAutoTopicCreation: true,
     });
     await consumer.connect();
@@ -113,6 +116,42 @@ export class ResilientKafkaClient {
     const topicOffsets = offsets.find((o) => o.topic === topic);
     const partitionOffset = topicOffsets?.partitions.find((p) => p.partition === partition);
     return partitionOffset?.offset ?? null;
+  }
+
+  public async fetchConsumerGroupLag(
+    groupId: string,
+    topic: string
+  ): Promise<{
+    partitions: Array<{
+      partition: number;
+      logEndOffset: string;
+      committedOffset: string;
+      lag: number;
+    }>;
+    totalLag: number;
+  }> {
+    const admin = await this.getAdmin();
+    const topicOffsets = await admin.fetchTopicOffsets(topic);
+    const groupOffsets = await admin.fetchOffsets({ groupId, topics: [topic] });
+    const targetGroupOffsets = groupOffsets.find((t) => t.topic === topic);
+
+    let totalLag = 0;
+    const partitions = topicOffsets.map((tOffset) => {
+      const gOffset = targetGroupOffsets?.partitions.find((p) => p.partition === tOffset.partition);
+      const highWatermark = BigInt(tOffset.offset);
+      const committed = gOffset?.offset && gOffset.offset !== '-1' ? BigInt(gOffset.offset) : 0n;
+      const lag = Number(highWatermark >= committed ? highWatermark - committed : 0n);
+      totalLag += lag;
+
+      return {
+        partition: tOffset.partition,
+        logEndOffset: tOffset.offset,
+        committedOffset: gOffset?.offset ?? '-1',
+        lag,
+      };
+    });
+
+    return { partitions, totalLag };
   }
 
   public async disconnectAll(): Promise<void> {
