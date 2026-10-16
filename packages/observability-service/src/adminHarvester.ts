@@ -87,7 +87,7 @@ export function decodeMemberAssignment(buffer: Buffer): Array<{ topic: string; p
 }
 
 export class KafkaAdminHarvester {
-  private kafkaClient: ResilientKafkaClient;
+  public readonly kafkaClient: ResilientKafkaClient;
 
   constructor(kafkaClient: ResilientKafkaClient) {
     this.kafkaClient = kafkaClient;

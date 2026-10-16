@@ -1,11 +1,16 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import { ResilientKafkaClient } from '@streamz/kafka-client';
 import { KafkaAdminHarvester } from './adminHarvester.js';
+import { PartitionLagEngine } from './lagEngine.js';
 
-export function createObservabilityServer(harvester: KafkaAdminHarvester): FastifyInstance {
+export function createObservabilityServer(
+  harvester: KafkaAdminHarvester,
+  lagEngine?: PartitionLagEngine
+): FastifyInstance {
+  const engine = lagEngine || new PartitionLagEngine(harvester.kafkaClient, harvester);
   const fastify = Fastify({ logger: false });
 
-  // Simple CORS headers
+  // CORS headers
   fastify.addHook('onRequest', async (_request, reply) => {
     reply.header('Access-Control-Allow-Origin', '*');
     reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -95,10 +100,41 @@ export function createObservabilityServer(harvester: KafkaAdminHarvester): Fasti
     }
   });
 
+  // All Consumer Groups Lag
+  fastify.get('/api/kafka/lag', async (_request, reply) => {
+    try {
+      const lagSummaries = await engine.getAllConsumerGroupsLag();
+      return reply.send(lagSummaries);
+    } catch (err) {
+      return reply.status(500).send({
+        error: 'Failed to compute consumer groups lag',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+
+  // Single Consumer Group Lag
+  fastify.get('/api/kafka/lag/:groupId', async (request, reply) => {
+    const { groupId } = request.params as { groupId: string };
+    try {
+      const lagSummary = await engine.getConsumerGroupLag(groupId);
+      if (!lagSummary) {
+        return reply.status(404).send({ error: `Consumer group '${groupId}' not found or inaccessible` });
+      }
+      return reply.send(lagSummary);
+    } catch (err) {
+      return reply.status(500).send({
+        error: `Failed to compute lag for consumer group '${groupId}'`,
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+
   return fastify;
 }
 
 export * from './adminHarvester.js';
+export * from './lagEngine.js';
 
 const PORT = Number(process.env.PORT) || 3004;
 
@@ -109,7 +145,8 @@ async function start() {
   });
 
   const harvester = new KafkaAdminHarvester(kafkaClient);
-  const server = createObservabilityServer(harvester);
+  const lagEngine = new PartitionLagEngine(kafkaClient, harvester);
+  const server = createObservabilityServer(harvester, lagEngine);
 
   try {
     await server.listen({ port: PORT, host: '0.0.0.0' });
