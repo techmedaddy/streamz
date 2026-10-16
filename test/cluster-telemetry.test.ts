@@ -13,7 +13,7 @@ async function runClusterTelemetryTest() {
   });
 
   const harvester = new KafkaAdminHarvester(kafkaClient);
-  const server = createObservabilityServer(harvester);
+  const server = await createObservabilityServer(harvester);
 
   try {
     // 1. Direct Harvester: Cluster Overview

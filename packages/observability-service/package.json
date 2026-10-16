@@ -13,7 +13,8 @@
     "@streamz/contracts": "*",
     "@streamz/kafka-client": "*",
     "dotenv": "^16.4.7",
-    "fastify": "^5.2.1"
+    "fastify": "^5.2.1",
+    "@fastify/websocket": "^11.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

@@ -25,7 +25,7 @@ async function runEventTracingTest() {
   const harvester = new KafkaAdminHarvester(kafkaClient);
   const lagEngine = new PartitionLagEngine(kafkaClient, harvester);
   const traceCollector = new TraceCollector();
-  const server = createObservabilityServer(harvester, lagEngine, traceCollector);
+  const server = await createObservabilityServer(harvester, lagEngine, traceCollector);
 
   // 1. Start Telemetry Trace Consumer
   console.log('Step 1: Starting TraceCollector telemetry consumer...');

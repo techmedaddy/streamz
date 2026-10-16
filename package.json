@@ -18,6 +18,7 @@
     "test:telemetry": "tsx test/cluster-telemetry.test.ts",
     "test:lag": "tsx test/partition-lag.test.ts",
     "test:tracing": "tsx test/event-tracing.test.ts",
+    "test:websocket": "tsx test/websocket-stream.test.ts",
     "dev:order": "npm run dev -w @streamz/order-service",
     "dev:inventory": "npm run dev -w @streamz/inventory-service",
     "dev:notification": "npm run dev -w @streamz/notification-worker",
@@ -29,8 +30,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
+    "@types/ws": "^8.18.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "ws": "^8.22.0"
   }
 }

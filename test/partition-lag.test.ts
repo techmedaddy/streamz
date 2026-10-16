@@ -18,7 +18,7 @@ async function runPartitionLagTest() {
 
   const harvester = new KafkaAdminHarvester(kafkaClient);
   const lagEngine = new PartitionLagEngine(kafkaClient, harvester);
-  const server = createObservabilityServer(harvester, lagEngine);
+  const server = await createObservabilityServer(harvester, lagEngine);
   const admin = await kafkaClient.getAdmin();
   const producer = await kafkaClient.getProducer();
 

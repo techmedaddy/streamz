@@ -1,17 +1,26 @@
 import Fastify, { FastifyInstance } from 'fastify';
+import fastifyWebsocket from '@fastify/websocket';
 import { ResilientKafkaClient } from '@streamz/kafka-client';
 import { KafkaAdminHarvester } from './adminHarvester.js';
 import { PartitionLagEngine } from './lagEngine.js';
 import { TraceCollector, TraceQueryOptions } from './traceCollector.js';
+import { TelemetryBroadcaster } from './telemetryBroadcaster.js';
 
-export function createObservabilityServer(
+export async function createObservabilityServer(
   harvester: KafkaAdminHarvester,
   lagEngine?: PartitionLagEngine,
-  traceCollector?: TraceCollector
-): FastifyInstance {
+  traceCollector?: TraceCollector,
+  broadcaster?: TelemetryBroadcaster
+): Promise<FastifyInstance & { broadcaster: TelemetryBroadcaster }> {
   const engine = lagEngine || new PartitionLagEngine(harvester.kafkaClient, harvester);
   const collector = traceCollector || new TraceCollector();
+  const liveBroadcaster =
+    broadcaster || new TelemetryBroadcaster(harvester, engine, collector);
+
   const fastify = Fastify({ logger: false });
+
+  // Register WebSocket plugin
+  await fastify.register(fastifyWebsocket);
 
   // CORS headers
   fastify.addHook('onRequest', async (_request, reply) => {
@@ -27,6 +36,12 @@ export function createObservabilityServer(
   // Healthcheck
   fastify.get('/health', async () => {
     return { status: 'ok', service: 'observability-service' };
+  });
+
+  // WebSocket Live Telemetry Stream
+  fastify.get('/ws/telemetry', { websocket: true }, (connection) => {
+    const ws = (connection as any).socket || connection;
+    liveBroadcaster.handleConnection(ws);
   });
 
   // Kafka Cluster Overview
@@ -177,12 +192,16 @@ export function createObservabilityServer(
     }
   });
 
-  return fastify;
+  // Attach broadcaster reference to instance
+  (fastify as any).broadcaster = liveBroadcaster;
+
+  return fastify as any;
 }
 
 export * from './adminHarvester.js';
 export * from './lagEngine.js';
 export * from './traceCollector.js';
+export * from './telemetryBroadcaster.js';
 
 const PORT = Number(process.env.PORT) || 3004;
 
@@ -204,11 +223,14 @@ async function start() {
     console.warn('[ObservabilityService] Telemetry consumer initialization note:', err);
   }
 
-  const server = createObservabilityServer(harvester, lagEngine, traceCollector);
+  const server = await createObservabilityServer(harvester, lagEngine, traceCollector);
+
+  // Start periodic WebSocket telemetry pulse
+  server.broadcaster.startPeriodicBroadcast(1000);
 
   try {
     await server.listen({ port: PORT, host: '0.0.0.0' });
-    console.log(`[ObservabilityService] API running on port ${PORT}`);
+    console.log(`[ObservabilityService] API & WebSocket running on port ${PORT}`);
   } catch (err) {
     console.error('[ObservabilityService] Failed to start:', err);
     process.exit(1);
