@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "vitest run test/e2e-baseline.test.ts",
     "dev:order": "npm run dev -w @streamz/order-service",
     "dev:inventory": "npm run dev -w @streamz/inventory-service",
     "dev:notification": "npm run dev -w @streamz/notification-worker",
