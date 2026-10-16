@@ -1,0 +1,24 @@
+{
+  "name": "@streamz/notification-worker",
+  "version": "1.0.0",
+  "description": "Notification worker service consuming terminal order events, recording notifications, and handling DLQ routing",
+  "main": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@streamz/contracts": "*",
+    "@streamz/kafka-client": "*",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/pg": "^8.11.10",
+    "typescript": "^5.7.2"
+  }
+}
