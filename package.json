@@ -15,6 +15,7 @@
     "test:idempotency": "tsx test/idempotency.test.ts",
     "test:dlq": "tsx test/dlq-resilience.test.ts",
     "test:chaos": "tsx test/chaos-scenarios.test.ts",
+    "test:telemetry": "tsx test/cluster-telemetry.test.ts",
     "dev:order": "npm run dev -w @streamz/order-service",
     "dev:inventory": "npm run dev -w @streamz/inventory-service",
     "dev:notification": "npm run dev -w @streamz/notification-worker",

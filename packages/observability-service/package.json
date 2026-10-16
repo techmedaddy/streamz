@@ -1,0 +1,22 @@
+{
+  "name": "@streamz/observability-service",
+  "version": "1.0.0",
+  "description": "Kafka Observability Backend harvesting real-time cluster telemetry, consumer group metrics, and event traces",
+  "main": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@streamz/contracts": "*",
+    "@streamz/kafka-client": "*",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}
