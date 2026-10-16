@@ -1,0 +1,19 @@
+{
+  "name": "@streamz/kafka-client",
+  "version": "1.0.0",
+  "description": "Shared resilient KafkaJS client wrapper and consumer/producer helpers",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@streamz/contracts": "*",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}

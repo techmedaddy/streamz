@@ -1,0 +1,27 @@
+{
+  "name": "streamz-inventory-observability",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kafka-Powered Inventory Management Microservices with Real-time Observability Dashboard",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:order": "npm run dev -w @streamz/order-service",
+    "dev:inventory": "npm run dev -w @streamz/inventory-service",
+    "dev:notification": "npm run dev -w @streamz/notification-worker",
+    "dev:observability": "npm run dev -w @streamz/observability-service",
+    "dev:dashboard": "npm run dev -w @streamz/dashboard-ui",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
