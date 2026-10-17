@@ -1,9 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, X, Layers, ShoppingCart, GitBranch, ArrowRight } from 'lucide-react';
+import {
+  Search,
+  X,
+  Layers,
+  ShoppingCart,
+  GitBranch,
+  ArrowRight,
+  Zap,
+  Hash,
+  BookOpen,
+} from 'lucide-react';
 import { Product, Order } from '../hooks/useInventoryApi';
 import { NavSection } from './Sidebar';
+import { KAFKA_DOCS } from './docs/kafkaContent';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -55,6 +66,13 @@ export function CommandPalette({
       o.customer_id.toLowerCase().includes(query.toLowerCase())
   );
 
+  const filteredDocs = KAFKA_DOCS.filter(
+    (d) =>
+      d.title.toLowerCase().includes(query.toLowerCase()) ||
+      d.summary.toLowerCase().includes(query.toLowerCase()) ||
+      d.subtitle.toLowerCase().includes(query.toLowerCase())
+  );
+
   return (
     <div
       style={{
@@ -79,16 +97,15 @@ export function CommandPalette({
 
       {/* Palette Container */}
       <div
-        className="card"
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: '560px',
+          maxWidth: '580px',
           backgroundColor: '#ffffff',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          border: '1px solid var(--border-default)',
           overflow: 'hidden',
-          zIndex: 10,
         }}
       >
         {/* Search Input Bar */}
@@ -96,16 +113,16 @@ export function CommandPalette({
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '12px 16px',
+            gap: '12px',
+            padding: '14px 16px',
             borderBottom: '1px solid var(--border-default)',
-            gap: '10px',
           }}
         >
           <Search size={16} color="var(--text-muted)" />
           <input
-            type="text"
             autoFocus
-            placeholder="Search SKUs, orders, documentation..."
+            type="text"
+            placeholder="Search docs, Kafka modules, SKUs, dispatches..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -114,7 +131,7 @@ export function CommandPalette({
               outline: 'none',
               fontSize: '13.5px',
               color: 'var(--text-main)',
-              fontFamily: 'var(--font-sans)',
+              backgroundColor: 'transparent',
             }}
           />
           <kbd
@@ -133,13 +150,41 @@ export function CommandPalette({
         </div>
 
         {/* Results List */}
-        <div style={{ maxHeight: '360px', overflowY: 'auto', padding: '8px' }}>
+        <div style={{ maxHeight: '400px', overflowY: 'auto', padding: '8px' }}>
           {/* Quick Jump Sections */}
           {!query && (
             <div style={{ marginBottom: '8px' }}>
               <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '6px 8px', textTransform: 'uppercase' }}>
-                Navigation
+                Interactive & Learning Tools
               </div>
+              <button
+                onClick={() => {
+                  onSelectSection('simulator');
+                  onClose();
+                }}
+                className="btn btn-ghost"
+                style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', fontSize: '12.5px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={14} color="var(--emerald-solid)" />
+                  <span>Kafka Event Step Simulator</span>
+                </div>
+                <ArrowRight size={13} color="var(--text-muted)" />
+              </button>
+              <button
+                onClick={() => {
+                  onSelectSection('topics');
+                  onClose();
+                }}
+                className="btn btn-ghost"
+                style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', fontSize: '12.5px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Hash size={14} color="var(--emerald-solid)" />
+                  <span>Topics, Partitions & Murmur2 Calculator</span>
+                </div>
+                <ArrowRight size={13} color="var(--text-muted)" />
+              </button>
               <button
                 onClick={() => {
                   onSelectSection('overview');
@@ -148,31 +193,43 @@ export function CommandPalette({
                 className="btn btn-ghost"
                 style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', fontSize: '12.5px' }}
               >
-                <span>Live Operations Console</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Layers size={14} color="var(--text-muted)" />
+                  <span>Live Operations Console</span>
+                </div>
                 <ArrowRight size={13} color="var(--text-muted)" />
               </button>
-              <button
-                onClick={() => {
-                  onSelectSection('topology');
-                  onClose();
-                }}
-                className="btn btn-ghost"
-                style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', fontSize: '12.5px' }}
-              >
-                <span>System Architecture Topology (Mermaid)</span>
-                <ArrowRight size={13} color="var(--text-muted)" />
-              </button>
-              <button
-                onClick={() => {
-                  onSelectSection('contracts');
-                  onClose();
-                }}
-                className="btn btn-ghost"
-                style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', fontSize: '12.5px' }}
-              >
-                <span>Kafka Event Contracts Specification</span>
-                <ArrowRight size={13} color="var(--text-muted)" />
-              </button>
+            </div>
+          )}
+
+          {/* Docs Search Match */}
+          {filteredDocs.length > 0 && (
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '6px 8px', textTransform: 'uppercase' }}>
+                Kafka Masterclass Modules ({filteredDocs.length})
+              </div>
+              {filteredDocs.slice(0, 3).map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => {
+                    onSelectSection(d.id as NavSection);
+                    onClose();
+                  }}
+                  className="btn btn-ghost"
+                  style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', textAlign: 'left' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BookOpen size={13} color="var(--emerald-solid)" />
+                    <div>
+                      <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>
+                        Module {d.number}: {d.title}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{d.badge}</div>
+                    </div>
+                  </div>
+                  <ArrowRight size={13} color="var(--text-muted)" />
+                </button>
+              ))}
             </div>
           )}
 
@@ -182,7 +239,7 @@ export function CommandPalette({
               <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '6px 8px', textTransform: 'uppercase' }}>
                 Warehouse SKUs ({filteredProducts.length})
               </div>
-              {filteredProducts.slice(0, 4).map((p) => (
+              {filteredProducts.slice(0, 3).map((p) => (
                 <button
                   key={p.id}
                   onClick={() => {
@@ -193,7 +250,7 @@ export function CommandPalette({
                   style={{ width: '100%', justifyContent: 'space-between', padding: '6px 10px', textAlign: 'left' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Layers size={13} color="var(--emerald)" />
+                    <Layers size={13} color="var(--emerald-solid)" />
                     <div>
                       <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>{p.name}</div>
                       <div className="font-mono" style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{p.sku} • ${p.price}</div>
@@ -211,7 +268,7 @@ export function CommandPalette({
               <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '6px 8px', textTransform: 'uppercase' }}>
                 Dispatched Orders ({filteredOrders.length})
               </div>
-              {filteredOrders.slice(0, 4).map((o) => (
+              {filteredOrders.slice(0, 3).map((o) => (
                 <button
                   key={o.id}
                   onClick={() => {
@@ -224,11 +281,11 @@ export function CommandPalette({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <ShoppingCart size={13} color="var(--text-muted)" />
                     <div>
-                      <div className="font-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>#{o.id.slice(0, 8)}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o.customer_id} • ${parseFloat(o.total_amount).toFixed(2)}</div>
+                      <div className="font-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>{o.id}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.customer_id} • ${o.total_amount}</div>
                     </div>
                   </div>
-                  <span className={`badge ${o.status === 'CONFIRMED' ? 'badge-success' : o.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}`}>
+                  <span className={`badge ${o.status === 'CONFIRMED' ? 'badge-success' : o.status === 'REJECTED' ? 'badge-danger' : 'badge-neutral'} font-mono`}>
                     {o.status}
                   </span>
                 </button>

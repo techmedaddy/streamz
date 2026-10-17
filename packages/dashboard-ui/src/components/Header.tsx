@@ -8,7 +8,9 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
+  BookOpen,
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface HeaderProps {
   onOpenCommandPalette: () => void;
@@ -145,6 +147,27 @@ export function Header({
             {allServicesHealthy ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
             <span>{allServicesHealthy ? 'Cluster Healthy' : 'Degraded'}</span>
           </div>
+
+          {/* Dedicated Docs Portal Link (Dark Nextra style) */}
+          <Link
+            href="/docs"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '5px 12px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#ffffff',
+              backgroundColor: '#171717',
+              textDecoration: 'none',
+              border: '1px solid #262626',
+            }}
+          >
+            <BookOpen size={13} color="#10b981" />
+            <span>Kafka Docs</span>
+          </Link>
 
           {/* Sync Button */}
           <button

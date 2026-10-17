@@ -12,6 +12,10 @@ import { CreateOrderModal } from '../components/CreateOrderModal';
 import { CommandPalette } from '../components/CommandPalette';
 import { MermaidChart } from '../components/MermaidChart';
 import { useInventoryApi, Product, Order } from '../hooks/useInventoryApi';
+import { KafkaSimulator } from '../components/explorer/KafkaSimulator';
+import { TopicInspector } from '../components/explorer/TopicInspector';
+import { DocsLayout } from '../components/docs/DocsLayout';
+import { KAFKA_DOCS } from '../components/docs/kafkaContent';
 
 const TOPOLOGY_MERMAID = `graph TD
     Client[Client Dashboard] -->|HTTP POST /orders| OS[Order Service<br/>Port 3001]
@@ -332,6 +336,33 @@ export default function DashboardHome() {
                 </table>
               </div>
             </div>
+          )}
+
+          {/* Section: INTERACTIVE EVENT STEP SIMULATOR */}
+          {currentSection === 'simulator' && (
+            <KafkaSimulator
+              products={products}
+              onPlaceLiveOrder={placeOrder}
+            />
+          )}
+
+          {/* Section: TOPICS & PARTITIONS INSPECTOR */}
+          {currentSection === 'topics' && (
+            <TopicInspector />
+          )}
+
+          {/* Section: KAFKA MASTERCLASS CHAPTERS */}
+          {(currentSection.startsWith('kafka-') || currentSection === 'streamz-architecture') && (
+            (() => {
+              const activeChapter =
+                KAFKA_DOCS.find((d) => d.id === currentSection) || KAFKA_DOCS[0];
+              return (
+                <DocsLayout
+                  chapter={activeChapter}
+                  onNavigateChapter={(id) => setCurrentSection(id as NavSection)}
+                />
+              );
+            })()
           )}
 
           {/* Section 6: SPECS */}
