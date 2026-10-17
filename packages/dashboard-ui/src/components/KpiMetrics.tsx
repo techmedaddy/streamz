@@ -30,82 +30,73 @@ export function KpiMetrics({ products, orders }: KpiMetricsProps) {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '14px',
         marginBottom: '24px',
       }}
     >
       {/* Metric 1: Total SKUs in Catalog */}
       <div className="card" style={{ padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span
-            className="font-mono"
-            style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}
-          >
-            CATALOG SKUs
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Active Catalog SKUs
           </span>
           <div style={{ color: 'var(--text-muted)' }}>
             <Boxes size={15} />
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span className="font-mono" style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
             {totalSkus}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>active products</span>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>products tracked</span>
         </div>
-        <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-          <span className="font-mono" style={{ color: 'var(--text-main)', fontWeight: 600 }}>{totalStock.toLocaleString()}</span> units gross inventory
+        <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+          <span className="font-mono" style={{ fontWeight: 600, color: 'var(--text-main)' }}>{totalStock.toLocaleString()}</span> units gross inventory
         </div>
       </div>
 
       {/* Metric 2: Available Stock */}
       <div className="card" style={{ padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span
-            className="font-mono"
-            style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}
-          >
-            DISPATCH READY
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Available for Sale
           </span>
-          <div style={{ color: 'var(--primary)' }}>
+          <div style={{ color: 'var(--emerald)' }}>
             <Layers size={15} />
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span className="font-mono" style={{ fontSize: '24px', fontWeight: 700, color: 'var(--primary)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--emerald)', letterSpacing: '-0.02em' }}>
             {availableStock.toLocaleString()}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>unreserved units</span>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>unreserved units</span>
         </div>
-        <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+        <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
           <span className="font-mono" style={{ color: 'var(--warning-text)', fontWeight: 600 }}>
             {totalReserved.toLocaleString()} units
           </span>{' '}
-          locked in reservation queue
+          currently reserved in carts
         </div>
       </div>
 
       {/* Metric 3: Orders Processed */}
       <div className="card" style={{ padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span
-            className="font-mono"
-            style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}
-          >
-            DISPATCH VOLUME
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Dispatches Processed
           </span>
-          <div style={{ color: 'var(--success-text)' }}>
+          <div style={{ color: 'var(--text-main)' }}>
             <TrendingUp size={15} />
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span className="font-mono" style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
             {totalOrders}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>total placed</span>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>total placed</span>
         </div>
-        <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', gap: '6px' }}>
+        <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', gap: '6px' }}>
           <span style={{ color: 'var(--success-text)', fontWeight: 600 }}>{confirmedOrders} confirmed</span>
           <span style={{ color: 'var(--border-strong)' }}>/</span>
           <span style={{ color: 'var(--danger-text)', fontWeight: 600 }}>{rejectedOrders} rejected</span>
@@ -120,25 +111,22 @@ export function KpiMetrics({ products, orders }: KpiMetricsProps) {
 
       {/* Metric 4: Fulfillment Success Rate */}
       <div className="card" style={{ padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span
-            className="font-mono"
-            style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}
-          >
-            FULFILLMENT RATE
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Fulfillment Rate
           </span>
-          <div style={{ color: 'var(--success-text)' }}>
+          <div style={{ color: 'var(--emerald)' }}>
             <CheckCircle2 size={15} />
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span className="font-mono" style={{ fontSize: '24px', fontWeight: 700, color: 'var(--success-text)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--emerald)', letterSpacing: '-0.02em' }}>
             {fulfillmentRate}%
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>stock match</span>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>stock match</span>
         </div>
-        <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-          Guaranteed atomic PostgreSQL row-locks
+        <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+          Zero stock overselling with atomic row locks
         </div>
       </div>
     </div>

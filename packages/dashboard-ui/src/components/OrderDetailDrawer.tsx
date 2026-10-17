@@ -64,25 +64,24 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
         justifyContent: 'flex-end',
       }}
     >
-      {/* Backdrop (Solid Dimmer, No Blur) */}
+      {/* Backdrop (TrackOpenSource style) */}
       <div
         onClick={onClose}
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: '#000000',
-          opacity: 0.6,
+          backgroundColor: 'rgba(23, 23, 23, 0.3)',
         }}
       />
 
-      {/* Drawer Container (100% Solid Opaque Matte Surface) */}
+      {/* Slide-out panel (RepoSideSheet style) */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: '480px',
+          maxWidth: '520px',
           height: '100%',
-          backgroundColor: 'var(--bg-surface)',
+          backgroundColor: '#ffffff',
           borderLeft: '1px solid var(--border-default)',
           boxShadow: 'var(--shadow-lg)',
           display: 'flex',
@@ -93,26 +92,26 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
         {/* Drawer Header */}
         <div
           style={{
-            padding: '18px 22px',
+            padding: '18px 24px',
             borderBottom: '1px solid var(--border-default)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: 'var(--bg-subtle)',
+            backgroundColor: '#ffffff',
           }}
         >
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="font-mono" style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>
-                DISPATCH #{order.id.slice(0, 8)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)' }}>
+                Order #{order.id.slice(0, 8)}
               </span>
-              <span className={`badge ${statusBadgeClass}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+              <span className={`badge ${statusBadgeClass}`}>
                 <StatusIcon size={11} />
                 {order.status}
               </span>
             </div>
-            <div className="font-mono" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
-              Kafka Key: {order.id}
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Kafka Aggregate ID: <span className="font-mono">{order.id}</span>
             </div>
           </div>
 
@@ -127,7 +126,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
         </div>
 
         {/* Drawer Content Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '22px', backgroundColor: 'var(--bg-surface)' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#ffffff' }}>
           {/* Rejection Alert if failed */}
           {isRejected && (
             <div
@@ -136,7 +135,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 border: '1px solid var(--danger-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '12px 14px',
-                marginBottom: '18px',
+                marginBottom: '20px',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '10px',
@@ -144,8 +143,8 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
             >
               <AlertTriangle size={15} color="var(--danger-text)" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <div style={{ fontWeight: 700, color: 'var(--danger-text)', fontSize: '12.5px' }}>
-                  DISPATCH REJECTED
+                <div style={{ fontWeight: 600, color: 'var(--danger-text)', fontSize: '12.5px' }}>
+                  Fulfillment Rejected
                 </div>
                 <div style={{ fontSize: '11.5px', color: 'var(--danger-text)', marginTop: '2px' }}>
                   {order.rejection_reason || 'Insufficient warehouse stock available to fulfill this order.'}
@@ -160,7 +159,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '10px',
-              marginBottom: '22px',
+              marginBottom: '24px',
             }}
           >
             <div
@@ -171,8 +170,8 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 borderRadius: 'var(--radius-sm)',
               }}
             >
-              <div className="font-mono" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
-                CUSTOMER
+              <div style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
+                Customer Account
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-main)', fontSize: '13px' }}>
                 <User size={13} color="var(--text-secondary)" />
@@ -188,12 +187,12 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 borderRadius: 'var(--radius-sm)',
               }}
             >
-              <div className="font-mono" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
-                GROSS VALUE
+              <div style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
+                Total Amount
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, color: 'var(--text-main)', fontSize: '13px' }}>
-                <DollarSign size={13} color="var(--primary)" />
-                <span className="font-mono" style={{ color: 'var(--primary)' }}>${parseFloat(order.total_amount).toFixed(2)}</span>
+                <DollarSign size={13} color="var(--emerald)" />
+                <span className="font-mono">${parseFloat(order.total_amount).toFixed(2)}</span>
               </div>
             </div>
 
@@ -205,15 +204,15 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 borderRadius: 'var(--radius-sm)',
               }}
             >
-              <div className="font-mono" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
-                ALLOCATED SKU
+              <div style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
+                Allocated Product
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-main)', fontSize: '12.5px' }}>
                 <Boxes size={13} color="var(--text-secondary)" />
                 <span>{product ? product.name : order.product_id}</span>
               </div>
               <div className="font-mono" style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Units: {order.quantity}
+                Quantity: {order.quantity} units
               </div>
             </div>
 
@@ -225,8 +224,8 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 borderRadius: 'var(--radius-sm)',
               }}
             >
-              <div className="font-mono" style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
-                TIMESTAMP
+              <div style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '3px' }}>
+                Placed Timestamp
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text-main)' }}>
                 <Calendar size={12} color="var(--text-secondary)" />
@@ -237,11 +236,8 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
 
           {/* Fulfillment Lifecycle Timeline */}
           <div style={{ marginBottom: '24px' }}>
-            <h3
-              className="font-mono"
-              style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '12px', letterSpacing: '0.04em' }}
-            >
-              CHOREOGRAPHY PIPELINE
+            <h3 style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '12px' }}>
+              Fulfillment Lifecycle Flow
             </h3>
 
             <div style={{ position: 'relative', paddingLeft: '24px' }}>
@@ -266,14 +262,14 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                     top: '2px',
                     width: '16px',
                     height: '16px',
-                    borderRadius: '2px',
-                    backgroundColor: 'var(--success)',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--emerald)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <CheckCircle2 size={11} color="#0d0e12" />
+                  <CheckCircle2 size={11} color="#ffffff" />
                 </div>
                 <div>
                   <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>Order Placed → orders Topic</div>
@@ -292,19 +288,19 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                     top: '2px',
                     width: '16px',
                     height: '16px',
-                    borderRadius: '2px',
-                    backgroundColor: isPending ? 'var(--warning)' : isRejected ? 'var(--danger)' : 'var(--success)',
+                    borderRadius: '50%',
+                    backgroundColor: isPending ? 'var(--warning)' : isRejected ? 'var(--danger)' : 'var(--emerald)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
                   {isPending ? (
-                    <Clock size={10} color="#0d0e12" />
+                    <Clock size={10} color="#ffffff" />
                   ) : isRejected ? (
                     <XCircle size={11} color="#ffffff" />
                   ) : (
-                    <ShieldCheck size={11} color="#0d0e12" />
+                    <ShieldCheck size={11} color="#ffffff" />
                   )}
                 </div>
                 <div>
@@ -330,15 +326,15 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                     top: '2px',
                     width: '16px',
                     height: '16px',
-                    borderRadius: '2px',
-                    backgroundColor: isPending ? 'var(--bg-highlight)' : isRejected ? 'var(--danger)' : 'var(--success)',
+                    borderRadius: '50%',
+                    backgroundColor: isPending ? 'var(--bg-highlight)' : isRejected ? 'var(--danger)' : 'var(--emerald)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
                   {isConfirmed ? (
-                    <CheckCircle2 size={11} color="#0d0e12" />
+                    <CheckCircle2 size={11} color="#ffffff" />
                   ) : isRejected ? (
                     <XCircle size={11} color="#ffffff" />
                   ) : (
@@ -368,15 +364,15 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                     top: '2px',
                     width: '16px',
                     height: '16px',
-                    borderRadius: '2px',
-                    backgroundColor: isConfirmed ? 'var(--success)' : 'var(--bg-highlight)',
+                    borderRadius: '50%',
+                    backgroundColor: isConfirmed ? 'var(--emerald)' : 'var(--bg-highlight)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
                   {isConfirmed ? (
-                    <Send size={10} color="#0d0e12" />
+                    <Send size={10} color="#ffffff" />
                   ) : (
                     <div style={{ width: '4px', height: '4px', backgroundColor: 'var(--text-muted)' }} />
                   )}
@@ -385,7 +381,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                   <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>Notification Worker</div>
                   <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                     {isConfirmed
-                      ? 'Notification worker dispatched confirmation webhook/email.'
+                      ? 'Notification worker dispatched confirmation email & webhook.'
                       : isRejected
                       ? 'Rejection recorded; notification worker alerted.'
                       : 'Pending final status.'}
@@ -401,7 +397,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
               border: '1px solid var(--border-default)',
               borderRadius: 'var(--radius-sm)',
               overflow: 'hidden',
-              backgroundColor: 'var(--bg-surface)',
+              backgroundColor: '#ffffff',
             }}
           >
             <button
@@ -416,33 +412,32 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
                 justifyContent: 'space-between',
                 color: 'var(--text-secondary)',
                 fontSize: '11.5px',
-                fontFamily: 'var(--font-mono)',
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
-              <span>KAFKA EVENT ENVELOPE</span>
+              <span>Kafka Event Envelope Details</span>
               {showTechnicalDetails ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
 
             {showTechnicalDetails && (
-              <div style={{ padding: '12px', fontSize: '11.5px', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-subtle)' }}>
+              <div style={{ padding: '12px', fontSize: '11.5px', color: 'var(--text-secondary)', backgroundColor: '#ffffff' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '6px', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Partition Key:</span>
                   <span className="font-mono" style={{ color: 'var(--text-main)' }}>{order.id}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '6px', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Murmur2 Hash:</span>
-                  <span className="font-mono" style={{ color: 'var(--primary)' }}>0x{hash.toString(16).toUpperCase()}</span>
+                  <span className="font-mono" style={{ color: 'var(--text-main)' }}>0x{hash.toString(16).toUpperCase()}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '6px', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Partition:</span>
-                  <span className="font-mono" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                  <span className="font-mono" style={{ color: 'var(--emerald)', fontWeight: 600 }}>
                     Partition {partition}
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '6px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Topic Trail:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Topic Flow:</span>
                   <span className="font-mono" style={{ fontSize: '10.5px', color: 'var(--text-main)' }}>
                     orders → inventory-events → order-events
                   </span>
@@ -455,7 +450,7 @@ export function OrderDetailDrawer({ order, product, onClose }: OrderDetailDrawer
         {/* Drawer Footer Actions */}
         <div
           style={{
-            padding: '14px 22px',
+            padding: '14px 24px',
             borderTop: '1px solid var(--border-default)',
             display: 'flex',
             justifyContent: 'flex-end',

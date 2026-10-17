@@ -42,8 +42,18 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>Order Dispatch Stream</h2>
-            <span className="badge badge-neutral font-mono" style={{ fontSize: '10px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Orders & Dispatches Ledger</h2>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: '11px',
+                color: 'var(--text-muted)',
+                backgroundColor: 'var(--bg-subtle)',
+                padding: '1px 6px',
+                borderRadius: '3px',
+                border: '1px solid var(--border-default)',
+              }}
+            >
               {orders.length} Events
             </span>
           </div>
@@ -67,7 +77,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
             />
             <input
               type="text"
-              placeholder="Search dispatch or customer..."
+              placeholder="Search order or customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
@@ -92,7 +102,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               style={{
                 padding: '3px 8px',
                 fontSize: '11px',
-                backgroundColor: statusFilter === 'ALL' ? 'var(--bg-surface)' : 'transparent',
+                backgroundColor: statusFilter === 'ALL' ? '#ffffff' : 'transparent',
                 color: statusFilter === 'ALL' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'ALL' ? 600 : 500,
               }}
@@ -105,7 +115,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               style={{
                 padding: '3px 8px',
                 fontSize: '11px',
-                backgroundColor: statusFilter === 'CONFIRMED' ? 'var(--bg-surface)' : 'transparent',
+                backgroundColor: statusFilter === 'CONFIRMED' ? '#ffffff' : 'transparent',
                 color: statusFilter === 'CONFIRMED' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'CONFIRMED' ? 600 : 500,
               }}
@@ -118,7 +128,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               style={{
                 padding: '3px 8px',
                 fontSize: '11px',
-                backgroundColor: statusFilter === 'PENDING' ? 'var(--bg-surface)' : 'transparent',
+                backgroundColor: statusFilter === 'PENDING' ? '#ffffff' : 'transparent',
                 color: statusFilter === 'PENDING' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'PENDING' ? 600 : 500,
               }}
@@ -131,7 +141,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               style={{
                 padding: '3px 8px',
                 fontSize: '11px',
-                backgroundColor: statusFilter === 'REJECTED' ? 'var(--bg-surface)' : 'transparent',
+                backgroundColor: statusFilter === 'REJECTED' ? '#ffffff' : 'transparent',
                 color: statusFilter === 'REJECTED' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'REJECTED' ? 600 : 500,
               }}
@@ -147,20 +157,20 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
         <table className="data-table">
           <thead>
             <tr>
-              <th>Order Ref</th>
-              <th>Customer Account</th>
-              <th>Allocated Product</th>
-              <th>Gross Value</th>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Product & Quantity</th>
+              <th>Total Amount</th>
               <th>Status</th>
-              <th>Dispatched Time</th>
-              <th style={{ textAlign: 'right' }}>Audit</th>
+              <th>Placed At</th>
+              <th style={{ textAlign: 'right' }}>Details</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  {isLoading ? 'Polling Kafka dispatch log...' : 'No orders found matching filter criteria.'}
+                  {isLoading ? 'Polling order transactions...' : 'No orders found matching filter criteria.'}
                 </td>
               </tr>
             ) : (
@@ -191,7 +201,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
-                      <span className="font-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}>
+                      <span className="font-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
                         #{order.id.slice(0, 8)}
                       </span>
                     </td>
@@ -200,7 +210,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ color: 'var(--text-main)' }}>{productName}</span>
+                        <span>{productName}</span>
                         <span
                           className="font-mono"
                           style={{
@@ -223,13 +233,13 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${badgeClass}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+                      <span className={`badge ${badgeClass}`}>
                         <Icon size={11} />
                         {order.status}
                       </span>
                     </td>
                     <td>
-                      <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                         {formattedTime}
                       </span>
                     </td>

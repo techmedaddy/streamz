@@ -95,14 +95,13 @@ export function CreateOrderModal({
         padding: '16px',
       }}
     >
-      {/* Backdrop (Solid Dimmer, No Blur) */}
+      {/* Backdrop */}
       <div
         onClick={onClose}
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: '#000000',
-          opacity: 0.65,
+          backgroundColor: 'rgba(23, 23, 23, 0.4)',
         }}
       />
 
@@ -113,7 +112,7 @@ export function CreateOrderModal({
           position: 'relative',
           width: '100%',
           maxWidth: '480px',
-          backgroundColor: 'var(--bg-surface)',
+          backgroundColor: '#ffffff',
           border: '1px solid var(--border-default)',
           boxShadow: 'var(--shadow-lg)',
           borderRadius: 'var(--radius-lg)',
@@ -129,7 +128,7 @@ export function CreateOrderModal({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: 'var(--bg-subtle)',
+            backgroundColor: '#ffffff',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -139,7 +138,7 @@ export function CreateOrderModal({
                 height: '30px',
                 borderRadius: 'var(--radius-sm)',
                 backgroundColor: 'var(--primary)',
-                color: '#0d0e12',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -148,7 +147,7 @@ export function CreateOrderModal({
               <Boxes size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>Create Dispatch Order</h2>
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>Create Dispatch Order</h2>
               <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                 Ingests OrderCreated event into orders Kafka topic
               </p>
@@ -166,7 +165,7 @@ export function CreateOrderModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit}>
-          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--bg-surface)' }}>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff' }}>
             {error && (
               <div
                 style={{
@@ -188,8 +187,8 @@ export function CreateOrderModal({
 
             {/* Customer Select */}
             <div>
-              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '5px' }}>
-                CUSTOMER ACCOUNT
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '5px' }}>
+                Customer Account
               </label>
               <select
                 value={customerId}
@@ -206,8 +205,8 @@ export function CreateOrderModal({
 
             {/* Product Select */}
             <div>
-              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '5px' }}>
-                WAREHOUSE SKU
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '5px' }}>
+                Warehouse SKU
               </label>
               <select
                 value={productId}
@@ -221,7 +220,7 @@ export function CreateOrderModal({
                   const avail = Math.max(0, p.stock_quantity - p.reserved_quantity);
                   return (
                     <option key={p.id} value={p.id}>
-                      {p.name} (${parseFloat(p.price).toFixed(2)}) — {avail} on-hand
+                      {p.name} (${parseFloat(p.price).toFixed(2)}) — {avail} available
                     </option>
                   );
                 })}
@@ -231,11 +230,11 @@ export function CreateOrderModal({
             {/* Quantity Stepper */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  DISPATCH QUANTITY
+                <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-main)' }}>
+                  Order Quantity
                 </label>
                 <span className="font-mono" style={{ fontSize: '11px', color: availableStock > 0 ? 'var(--text-muted)' : 'var(--danger-text)' }}>
-                  Available: <strong>{availableStock} units</strong>
+                  Available in stock: <strong>{availableStock} units</strong>
                 </span>
               </div>
 
@@ -272,7 +271,7 @@ export function CreateOrderModal({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '11px', color: 'var(--warning-text)' }}>
                   <AlertCircle size={12} />
                   <span>
-                    Warning: Requested {quantity} exceeds available stock ({availableStock}). Kafka inventory consumer will reject this dispatch.
+                    Warning: Requested quantity ({quantity}) exceeds available stock ({availableStock}). This order will be rejected.
                   </span>
                 </div>
               )}
@@ -306,8 +305,8 @@ export function CreateOrderModal({
                   borderTop: '1px solid var(--border-default)',
                 }}
               >
-                <span>Estimated Value</span>
-                <span className="font-mono" style={{ color: 'var(--primary)' }}>
+                <span>Estimated Total</span>
+                <span className="font-mono" style={{ color: 'var(--emerald)' }}>
                   ${totalAmount}
                 </span>
               </div>
@@ -335,7 +334,7 @@ export function CreateOrderModal({
               disabled={isSubmitting || !productId}
               style={{ minWidth: '120px' }}
             >
-              {isSubmitting ? 'Publishing...' : 'Dispatch Order'}
+              {isSubmitting ? 'Placing Order...' : 'Dispatch Order'}
             </button>
           </div>
         </form>

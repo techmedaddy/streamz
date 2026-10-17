@@ -66,8 +66,8 @@ export function computePartition(key: string, numPartitions = 3): { hash: number
 
 // ── API Base URLs ──────────────────────────────────────────────────────────────
 
-const ORDER_SERVICE_URL = process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:3001';
-const INVENTORY_SERVICE_URL = process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL || 'http://localhost:3002';
+const ORDER_SERVICE_URL = process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || (typeof window !== 'undefined' ? '/api' : 'http://localhost:3001');
+const INVENTORY_SERVICE_URL = process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL || (typeof window !== 'undefined' ? '/api' : 'http://localhost:3002');
 
 // ── Hook ───────────────────────────────────────────────────────────────────────
 

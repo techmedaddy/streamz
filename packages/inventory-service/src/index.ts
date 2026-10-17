@@ -6,6 +6,15 @@ import { pool } from './db.js';
 
 const fastify = Fastify({ logger: true });
 
+fastify.addHook('onRequest', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', '*');
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (request.method === 'OPTIONS') {
+    return reply.status(200).send();
+  }
+});
+
 const kafkaClient = new ResilientKafkaClient({
   clientId: 'inventory-service',
   brokers: [process.env.KAFKA_BROKERS || 'localhost:9094'],
