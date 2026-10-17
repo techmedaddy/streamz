@@ -1,35 +1,18 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import {
-  Package,
+  Boxes,
   ShoppingCart,
   LayoutDashboard,
   Plus,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  Palette,
-  Check,
+  Layers,
 } from 'lucide-react';
 
 export type DashboardView = 'overview' | 'inventory' | 'orders';
-export type ThemePalette = 'zinc' | 'stone' | 'forest' | 'obsidian' | 'classic';
-
-interface ThemeOption {
-  id: ThemePalette;
-  name: string;
-  previewColor: string;
-  badge: string;
-}
-
-const THEME_OPTIONS: ThemeOption[] = [
-  { id: 'zinc', name: 'Zinc & Amber', previewColor: '#18181b', badge: 'Linear' },
-  { id: 'stone', name: 'Stone & Terracotta', previewColor: '#c2410c', badge: 'Notion' },
-  { id: 'forest', name: 'Evergreen & Sage', previewColor: '#155e42', badge: 'Wise' },
-  { id: 'obsidian', name: 'Obsidian Matte', previewColor: '#f59e0b', badge: 'Raycast' },
-  { id: 'classic', name: 'Classic Slate', previewColor: '#2563eb', badge: 'SaaS' },
-];
 
 interface NavbarProps {
   currentView: DashboardView;
@@ -38,8 +21,6 @@ interface NavbarProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   servicesOnline: { orders: boolean; inventory: boolean };
-  currentTheme: ThemePalette;
-  onSelectTheme: (theme: ThemePalette) => void;
 }
 
 export function Navbar({
@@ -49,25 +30,8 @@ export function Navbar({
   onRefresh,
   isRefreshing,
   servicesOnline,
-  currentTheme,
-  onSelectTheme,
 }: NavbarProps) {
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const themeMenuRef = useRef<HTMLDivElement>(null);
   const allServicesHealthy = servicesOnline.orders && servicesOnline.inventory;
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
-        setIsThemeMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
-
-  const activeThemeMeta = THEME_OPTIONS.find((t) => t.id === currentTheme) || THEME_OPTIONS[0];
 
   return (
     <header
@@ -85,232 +49,141 @@ export function Navbar({
           maxWidth: '1440px',
           margin: '0 auto',
           padding: '0 24px',
-          height: '60px',
+          height: '56px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        {/* Brand & Context */}
+        {/* Brand & Industrial Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: '30px',
+                height: '30px',
                 borderRadius: 'var(--radius-sm)',
                 backgroundColor: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--text-inverse)',
+                color: '#0d0e12',
+                fontWeight: 700,
               }}
             >
-              <Package size={18} />
+              <Boxes size={17} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
-                Streamz
-              </span>
               <span
+                className="font-mono"
                 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  backgroundColor: 'var(--bg-subtle)',
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-default)',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: 'var(--text-main)',
+                  letterSpacing: '0.04em',
                 }}
               >
-                Operations
+                STREAMZ
+              </span>
+              <span
+                className="badge badge-amber"
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.06em',
+                  fontWeight: 700,
+                }}
+              >
+                LOGISTICS
               </span>
             </div>
           </div>
 
-          <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border-default)' }} />
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-default)' }} />
 
-          {/* Segmented Navigation Tabs */}
+          {/* Segmented Industrial Tabs */}
           <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
               onClick={() => onViewChange('overview')}
               className={`btn btn-sm ${currentView === 'overview' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                fontWeight: currentView === 'overview' ? 600 : 500,
                 color: currentView === 'overview' ? 'var(--text-main)' : 'var(--text-secondary)',
                 backgroundColor: currentView === 'overview' ? 'var(--bg-subtle)' : 'transparent',
+                borderColor: currentView === 'overview' ? 'var(--border-strong)' : 'transparent',
               }}
             >
-              <LayoutDashboard size={14} />
-              Overview
+              <LayoutDashboard size={13} />
+              Operations Overview
             </button>
             <button
               onClick={() => onViewChange('inventory')}
               className={`btn btn-sm ${currentView === 'inventory' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                fontWeight: currentView === 'inventory' ? 600 : 500,
                 color: currentView === 'inventory' ? 'var(--text-main)' : 'var(--text-secondary)',
                 backgroundColor: currentView === 'inventory' ? 'var(--bg-subtle)' : 'transparent',
+                borderColor: currentView === 'inventory' ? 'var(--border-strong)' : 'transparent',
               }}
             >
-              <Package size={14} />
-              Inventory Stock
+              <Layers size={13} />
+              Warehouse SKUs
             </button>
             <button
               onClick={() => onViewChange('orders')}
               className={`btn btn-sm ${currentView === 'orders' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                fontWeight: currentView === 'orders' ? 600 : 500,
                 color: currentView === 'orders' ? 'var(--text-main)' : 'var(--text-secondary)',
                 backgroundColor: currentView === 'orders' ? 'var(--bg-subtle)' : 'transparent',
+                borderColor: currentView === 'orders' ? 'var(--border-strong)' : 'transparent',
               }}
             >
-              <ShoppingCart size={14} />
-              Orders Ledger
+              <ShoppingCart size={13} />
+              Dispatch Stream
             </button>
           </nav>
         </div>
 
-        {/* Right Side Controls */}
+        {/* Right Side Industrial Status & Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Service Status Indicator */}
+          {/* Service Status Badge */}
           <div
-            title={`Orders API: ${servicesOnline.orders ? 'Online' : 'Offline'} | Inventory API: ${servicesOnline.inventory ? 'Online' : 'Offline'}`}
+            title={`Orders Service: ${servicesOnline.orders ? 'Online' : 'Offline'} | Inventory Service: ${servicesOnline.inventory ? 'Online' : 'Offline'}`}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '20px',
-              backgroundColor: allServicesHealthy ? 'var(--success-subtle)' : 'var(--warning-subtle)',
-              border: `1px solid ${allServicesHealthy ? 'var(--success-border)' : 'var(--warning-border)'}`,
+              padding: '3px 8px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: allServicesHealthy ? 'var(--success-subtle)' : 'var(--danger-subtle)',
+              border: `1px solid ${allServicesHealthy ? 'var(--success-border)' : 'var(--danger-border)'}`,
               fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
               fontWeight: 600,
-              color: allServicesHealthy ? 'var(--success-text)' : 'var(--warning-text)',
+              color: allServicesHealthy ? 'var(--success-text)' : 'var(--danger-text)',
             }}
           >
-            {allServicesHealthy ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-            <span>{allServicesHealthy ? 'Operational' : 'Degraded'}</span>
+            {allServicesHealthy ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
+            <span>{allServicesHealthy ? 'SERVICES ONLINE' : 'SERVICES DEGRADED'}</span>
           </div>
 
-          {/* Theme Palette Switcher Dropdown */}
-          <div ref={themeMenuRef} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-              className="btn btn-secondary btn-sm"
-              title="Change theme palette"
-              style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '7px' }}
-            >
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: activeThemeMeta.previewColor,
-                  border: '1px solid var(--border-default)',
-                }}
-              />
-              <span style={{ fontSize: '12px' }}>{activeThemeMeta.name}</span>
-            </button>
-
-            {isThemeMenuOpen && (
-              <div
-                className="card"
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '100%',
-                  marginTop: '6px',
-                  width: '230px',
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-default)',
-                  boxShadow: 'var(--shadow-md)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '6px',
-                  zIndex: 50,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: 'var(--text-muted)',
-                    padding: '6px 8px 4px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  Opaque Color Palettes
-                </div>
-                {THEME_OPTIONS.map((theme) => {
-                  const isSelected = theme.id === currentTheme;
-                  return (
-                    <button
-                      key={theme.id}
-                      onClick={() => {
-                        onSelectTheme(theme.id);
-                        setIsThemeMenuOpen(false);
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: isSelected ? 'var(--bg-subtle)' : 'transparent',
-                        border: 'none',
-                        borderRadius: 'var(--radius-sm)',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div
-                          style={{
-                            width: '12px',
-                            height: '12px',
-                            borderRadius: '50%',
-                            backgroundColor: theme.previewColor,
-                            border: '1px solid var(--border-strong)',
-                            flexShrink: 0,
-                          }}
-                        />
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: isSelected ? 600 : 500, color: 'var(--text-main)' }}>
-                            {theme.name}
-                          </div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                            {theme.badge} style
-                          </div>
-                        </div>
-                      </div>
-                      {isSelected && <Check size={14} color="var(--primary-text)" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Refresh Action */}
+          {/* Sync Button */}
           <button
             onClick={onRefresh}
             className="btn btn-secondary btn-sm"
-            title="Refresh inventory and orders data"
-            style={{ padding: '6px 10px' }}
+            title="Poll database & Kafka state"
+            style={{ padding: '6px 9px' }}
           >
-            <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
-            <span>Sync</span>
+            <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+            <span style={{ fontSize: '11px' }}>Sync</span>
           </button>
 
-          {/* Create Order Button */}
+          {/* Primary Dispatch Action in Industrial Safety Amber */}
           <button
             onClick={onOpenNewOrder}
             className="btn btn-primary btn-sm"
-            style={{ padding: '6px 14px', fontWeight: 600 }}
+            style={{ padding: '6px 13px', fontWeight: 700, letterSpacing: '0.02em' }}
           >
-            <Plus size={14} />
-            <span>New Order</span>
+            <Plus size={13} />
+            <span>Dispatch Order</span>
           </button>
         </div>
       </div>

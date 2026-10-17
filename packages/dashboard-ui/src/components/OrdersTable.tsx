@@ -31,7 +31,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
       {/* Table Header Controls */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: '14px 18px',
           borderBottom: '1px solid var(--border-default)',
           display: 'flex',
           alignItems: 'center',
@@ -41,20 +41,25 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
         }}
       >
         <div>
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>Orders Ledger</h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Chronological transactional log of customer orders and fulfillment states
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>Order Dispatch Stream</h2>
+            <span className="badge badge-neutral font-mono" style={{ fontSize: '10px' }}>
+              {orders.length} Events
+            </span>
+          </div>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+            Real-time Kafka event log of customer orders and fulfillment states
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Search Input */}
-          <div style={{ position: 'relative', width: '220px' }}>
+          <div style={{ position: 'relative', width: '210px' }}>
             <Search
-              size={14}
+              size={13}
               style={{
                 position: 'absolute',
-                left: '10px',
+                left: '9px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: 'var(--text-muted)',
@@ -62,11 +67,11 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
             />
             <input
               type="text"
-              placeholder="Search order or customer..."
+              placeholder="Search dispatch or customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
-              style={{ paddingLeft: '30px', fontSize: '12px', height: '34px' }}
+              style={{ paddingLeft: '28px', fontSize: '12px', height: '32px' }}
             />
           </div>
 
@@ -74,9 +79,9 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
           <div
             style={{
               display: 'flex',
-              gap: '4px',
+              gap: '2px',
               backgroundColor: 'var(--bg-subtle)',
-              padding: '3px',
+              padding: '2px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-default)',
             }}
@@ -85,20 +90,20 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               onClick={() => setStatusFilter('ALL')}
               className={`btn btn-sm ${statusFilter === 'ALL' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'ALL' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'ALL' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'ALL' ? 600 : 500,
               }}
             >
-              All ({orders.length})
+              All
             </button>
             <button
               onClick={() => setStatusFilter('CONFIRMED')}
               className={`btn btn-sm ${statusFilter === 'CONFIRMED' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'CONFIRMED' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'CONFIRMED' ? 'var(--text-main)' : 'var(--text-secondary)',
@@ -111,7 +116,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               onClick={() => setStatusFilter('PENDING')}
               className={`btn btn-sm ${statusFilter === 'PENDING' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'PENDING' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'PENDING' ? 'var(--text-main)' : 'var(--text-secondary)',
@@ -124,7 +129,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
               onClick={() => setStatusFilter('REJECTED')}
               className={`btn btn-sm ${statusFilter === 'REJECTED' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'REJECTED' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'REJECTED' ? 'var(--text-main)' : 'var(--text-secondary)',
@@ -142,20 +147,20 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
         <table className="data-table">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Product & Quantity</th>
-              <th>Total Amount</th>
+              <th>Order Ref</th>
+              <th>Customer Account</th>
+              <th>Allocated Product</th>
+              <th>Gross Value</th>
               <th>Status</th>
-              <th>Placed At</th>
-              <th style={{ textAlign: 'right' }}>Details</th>
+              <th>Dispatched Time</th>
+              <th style={{ textAlign: 'right' }}>Audit</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  {isLoading ? 'Loading order transactions...' : 'No orders found matching filter criteria.'}
+                  {isLoading ? 'Polling Kafka dispatch log...' : 'No orders found matching filter criteria.'}
                 </td>
               </tr>
             ) : (
@@ -218,13 +223,13 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${badgeClass}`}>
+                      <span className={`badge ${badgeClass}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
                         <Icon size={11} />
                         {order.status}
                       </span>
                     </td>
                     <td>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                         {formattedTime}
                       </span>
                     </td>
@@ -235,7 +240,7 @@ export function OrdersTable({ orders, products, onSelectOrder, isLoading }: Orde
                           onSelectOrder(order);
                         }}
                         className="btn btn-ghost btn-sm"
-                        style={{ padding: '4px 8px' }}
+                        style={{ padding: '3px 7px' }}
                       >
                         <ChevronRight size={14} />
                       </button>

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Navbar, DashboardView, ThemePalette } from '../components/Navbar';
+import { Navbar, DashboardView } from '../components/Navbar';
 import { KpiMetrics } from '../components/KpiMetrics';
 import { InventoryTable } from '../components/InventoryTable';
 import { OrdersTable } from '../components/OrdersTable';
@@ -16,21 +16,6 @@ export default function DashboardHome() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [orderModalProduct, setOrderModalProduct] = useState<Product | null>(null);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<ThemePalette>('zinc');
-
-  // Initialize theme from document or localStorage (default: 'zinc' - Linear style, non-blue)
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('streamz_opaque_theme') as ThemePalette | null;
-    const themeToApply = savedTheme || 'zinc';
-    setCurrentTheme(themeToApply);
-    document.documentElement.setAttribute('data-theme', themeToApply);
-  }, []);
-
-  const handleSelectTheme = (theme: ThemePalette) => {
-    setCurrentTheme(theme);
-    localStorage.setItem('streamz_opaque_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-  };
 
   const {
     products,
@@ -65,7 +50,7 @@ export default function DashboardHome() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)' }}>
-      {/* Top Navigation with Palette Selector */}
+      {/* Top Industrial Navigation */}
       <Navbar
         currentView={currentView}
         onViewChange={setCurrentView}
@@ -73,30 +58,28 @@ export default function DashboardHome() {
         onRefresh={handleRefresh}
         isRefreshing={isManualRefreshing || loading}
         servicesOnline={servicesOnline}
-        currentTheme={currentTheme}
-        onSelectTheme={handleSelectTheme}
       />
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, padding: '28px 24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+      <main style={{ flex: 1, padding: '24px 24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
         {/* Connection Notice banner when offline */}
         {(!servicesOnline.orders || !servicesOnline.inventory) && (
           <div
             style={{
-              padding: '12px 18px',
-              marginBottom: '24px',
+              padding: '11px 16px',
+              marginBottom: '20px',
               backgroundColor: 'var(--danger-subtle)',
               border: '1px solid var(--danger-border)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '13px',
+              fontSize: '12px',
               color: 'var(--danger-text)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertCircle size={16} />
+              <AlertCircle size={15} />
               <span>
                 Microservices notice: {!servicesOnline.orders && 'Order Service is offline. '}
                 {!servicesOnline.inventory && 'Inventory Service is offline. '}
@@ -106,7 +89,7 @@ export default function DashboardHome() {
             <button
               onClick={handleRefresh}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '11px', padding: '4px 8px' }}
+              style={{ fontSize: '11px', padding: '3px 8px' }}
             >
               <RefreshCw size={11} />
               Retry
@@ -119,7 +102,7 @@ export default function DashboardHome() {
 
         {/* Tab 1: OVERVIEW */}
         {currentView === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <InventoryTable
               products={products.slice(0, 5)}
               onOrderProduct={handleOpenOrderWithProduct}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, ShoppingBag, Plus, AlertTriangle } from 'lucide-react';
+import { Search, Boxes, Plus, AlertTriangle } from 'lucide-react';
 import { Product } from '../hooks/useInventoryApi';
 
 interface InventoryTableProps {
@@ -30,7 +30,7 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
       {/* Table Header Controls */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: '14px 18px',
           borderBottom: '1px solid var(--border-default)',
           display: 'flex',
           alignItems: 'center',
@@ -40,20 +40,25 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
         }}
       >
         <div>
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>Product Inventory Catalog</h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Real-time warehouse stock tracking and reservation allocations
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>Warehouse SKU Inventory</h2>
+            <span className="badge badge-neutral font-mono" style={{ fontSize: '10px' }}>
+              {products.length} SKUs
+            </span>
+          </div>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+            Real-time warehouse stock tracking and atomic reservation locks
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Search Input */}
-          <div style={{ position: 'relative', width: '220px' }}>
+          <div style={{ position: 'relative', width: '210px' }}>
             <Search
-              size={14}
+              size={13}
               style={{
                 position: 'absolute',
-                left: '10px',
+                left: '9px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: 'var(--text-muted)',
@@ -61,11 +66,11 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
             />
             <input
               type="text"
-              placeholder="Search SKU or name..."
+              placeholder="Filter SKU or name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
-              style={{ paddingLeft: '30px', fontSize: '12px', height: '34px' }}
+              style={{ paddingLeft: '28px', fontSize: '12px', height: '32px' }}
             />
           </div>
 
@@ -73,9 +78,9 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
           <div
             style={{
               display: 'flex',
-              gap: '4px',
+              gap: '2px',
               backgroundColor: 'var(--bg-subtle)',
-              padding: '3px',
+              padding: '2px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-default)',
             }}
@@ -84,20 +89,20 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
               onClick={() => setStatusFilter('ALL')}
               className={`btn btn-sm ${statusFilter === 'ALL' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'ALL' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'ALL' ? 'var(--text-main)' : 'var(--text-secondary)',
                 fontWeight: statusFilter === 'ALL' ? 600 : 500,
               }}
             >
-              All ({products.length})
+              All
             </button>
             <button
               onClick={() => setStatusFilter('IN_STOCK')}
               className={`btn btn-sm ${statusFilter === 'IN_STOCK' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'IN_STOCK' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'IN_STOCK' ? 'var(--text-main)' : 'var(--text-secondary)',
@@ -110,7 +115,7 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
               onClick={() => setStatusFilter('LOW_STOCK')}
               className={`btn btn-sm ${statusFilter === 'LOW_STOCK' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{
-                padding: '4px 10px',
+                padding: '3px 8px',
                 fontSize: '11px',
                 backgroundColor: statusFilter === 'LOW_STOCK' ? 'var(--bg-surface)' : 'transparent',
                 color: statusFilter === 'LOW_STOCK' ? 'var(--text-main)' : 'var(--text-secondary)',
@@ -128,20 +133,20 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
         <table className="data-table">
           <thead>
             <tr>
-              <th>Product / SKU</th>
+              <th>SKU / Product Name</th>
               <th>Unit Price</th>
-              <th>Total Stock</th>
+              <th>Total On-Hand</th>
               <th>Reserved</th>
               <th>Available Units</th>
               <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Action</th>
+              <th style={{ textAlign: 'right' }}>Dispatch</th>
             </tr>
           </thead>
           <tbody>
             {filteredProducts.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  {isLoading ? 'Loading catalog products...' : 'No products found matching your search.'}
+                  {isLoading ? 'Polling warehouse stock...' : 'No SKUs found matching filter criteria.'}
                 </td>
               </tr>
             ) : (
@@ -152,13 +157,13 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                 const percentAvailable = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
 
                 let badgeClass = 'badge-success';
-                let statusLabel = 'In Stock';
+                let statusLabel = 'IN STOCK';
                 if (available === 0) {
                   badgeClass = 'badge-danger';
-                  statusLabel = 'Out of Stock';
+                  statusLabel = 'DEPLETED';
                 } else if (available <= 10) {
                   badgeClass = 'badge-warning';
-                  statusLabel = 'Low Stock';
+                  statusLabel = 'LOW STOCK';
                 }
 
                 return (
@@ -167,18 +172,18 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div
                           style={{
-                            width: '30px',
-                            height: '30px',
+                            width: '28px',
+                            height: '28px',
                             borderRadius: 'var(--radius-sm)',
                             backgroundColor: 'var(--bg-subtle)',
                             border: '1px solid var(--border-default)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: 'var(--text-secondary)',
+                            color: 'var(--primary)',
                           }}
                         >
-                          <ShoppingBag size={15} />
+                          <Boxes size={14} />
                         </div>
                         <div>
                           <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{p.name}</div>
@@ -194,10 +199,16 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                       </span>
                     </td>
                     <td>
-                      <span className="font-mono" style={{ color: 'var(--text-main)' }}>{total}</span>
+                      <span className="font-mono">{total}</span>
                     </td>
                     <td>
-                      <span className="font-mono" style={{ color: reserved > 0 ? 'var(--warning-text)' : 'var(--text-muted)', fontWeight: reserved > 0 ? 600 : 400 }}>
+                      <span
+                        className="font-mono"
+                        style={{
+                          color: reserved > 0 ? 'var(--warning-text)' : 'var(--text-muted)',
+                          fontWeight: reserved > 0 ? 600 : 400,
+                        }}
+                      >
                         {reserved}
                       </span>
                     </td>
@@ -206,9 +217,9 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                         <div
                           style={{
                             flex: 1,
-                            height: '6px',
+                            height: '5px',
                             backgroundColor: 'var(--bg-highlight)',
-                            borderRadius: '3px',
+                            borderRadius: '2px',
                             overflow: 'hidden',
                           }}
                         >
@@ -218,17 +229,17 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                               height: '100%',
                               backgroundColor:
                                 percentAvailable > 30 ? 'var(--success)' : percentAvailable > 0 ? 'var(--warning)' : 'var(--danger)',
-                              borderRadius: '3px',
+                              borderRadius: '2px',
                             }}
                           />
                         </div>
-                        <span className="font-mono" style={{ fontSize: '12px', fontWeight: 600, width: '30px', color: 'var(--text-main)' }}>
+                        <span className="font-mono" style={{ fontSize: '11.5px', fontWeight: 600, width: '32px' }}>
                           {available}
                         </span>
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${badgeClass}`}>
+                      <span className={`badge ${badgeClass}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
                         {available <= 10 && available > 0 && <AlertTriangle size={10} />}
                         {statusLabel}
                       </span>
@@ -238,7 +249,7 @@ export function InventoryTable({ products, onOrderProduct, isLoading }: Inventor
                         onClick={() => onOrderProduct(p)}
                         className="btn btn-secondary btn-sm"
                         disabled={available === 0}
-                        style={{ opacity: available === 0 ? 0.4 : 1 }}
+                        style={{ opacity: available === 0 ? 0.35 : 1, padding: '4px 9px' }}
                       >
                         <Plus size={12} />
                         <span>Order</span>

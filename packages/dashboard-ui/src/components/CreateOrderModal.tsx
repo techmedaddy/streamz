@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingCart, AlertCircle, Minus, Plus } from 'lucide-react';
+import { X, Boxes, AlertCircle, Minus, Plus } from 'lucide-react';
 import { Product } from '../hooks/useInventoryApi';
 
 interface CreateOrderModalProps {
@@ -66,7 +66,7 @@ export function CreateOrderModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productId) {
-      setError('Please select a product.');
+      setError('Please select a SKU product.');
       return;
     }
     if (quantity <= 0) {
@@ -79,7 +79,7 @@ export function CreateOrderModal({
       await onSubmit({ customerId, productId, quantity });
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Failed to submit order.');
+      setError(err?.message || 'Failed to submit dispatch order.');
     }
   };
 
@@ -95,24 +95,24 @@ export function CreateOrderModal({
         padding: '16px',
       }}
     >
-      {/* Backdrop (Solid Opaque Dimmer, No Blur) */}
+      {/* Backdrop (Solid Dimmer, No Blur) */}
       <div
         onClick={onClose}
         style={{
           position: 'absolute',
           inset: 0,
           backgroundColor: '#000000',
-          opacity: 0.5,
+          opacity: 0.65,
         }}
       />
 
-      {/* Modal Dialog (100% Solid Opaque Surface) */}
+      {/* Modal Dialog */}
       <div
         className="card"
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '480px',
           backgroundColor: 'var(--bg-surface)',
           border: '1px solid var(--border-default)',
           boxShadow: 'var(--shadow-lg)',
@@ -124,34 +124,33 @@ export function CreateOrderModal({
         {/* Header */}
         <div
           style={{
-            padding: '18px 24px',
+            padding: '16px 20px',
             borderBottom: '1px solid var(--border-default)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: 'var(--bg-surface)',
+            backgroundColor: 'var(--bg-subtle)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: '30px',
+                height: '30px',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: 'var(--primary-subtle)',
-                color: 'var(--primary)',
-                border: '1px solid var(--border-default)',
+                backgroundColor: 'var(--primary)',
+                color: '#0d0e12',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <ShoppingCart size={16} />
+              <Boxes size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>Create New Order</h2>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Place an order to test live inventory reservation
+              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>Create Dispatch Order</h2>
+              <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                Ingests OrderCreated event into orders Kafka topic
               </p>
             </div>
           </div>
@@ -161,20 +160,20 @@ export function CreateOrderModal({
             className="btn btn-ghost btn-sm"
             style={{ padding: '6px', color: 'var(--text-secondary)' }}
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
 
         {/* Form Body */}
         <form onSubmit={handleSubmit}>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', backgroundColor: 'var(--bg-surface)' }}>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--bg-surface)' }}>
             {error && (
               <div
                 style={{
                   backgroundColor: 'var(--danger-subtle)',
                   border: '1px solid var(--danger-border)',
                   borderRadius: 'var(--radius-sm)',
-                  padding: '10px 14px',
+                  padding: '9px 12px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -189,13 +188,13 @@ export function CreateOrderModal({
 
             {/* Customer Select */}
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-                Customer Account
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '5px' }}>
+                CUSTOMER ACCOUNT
               </label>
               <select
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value)}
-                className="form-select"
+                className="form-select font-mono"
               >
                 {PRESET_CUSTOMERS.map((cust) => (
                   <option key={cust} value={cust}>
@@ -207,8 +206,8 @@ export function CreateOrderModal({
 
             {/* Product Select */}
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
-                Catalog Product
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '5px' }}>
+                WAREHOUSE SKU
               </label>
               <select
                 value={productId}
@@ -222,7 +221,7 @@ export function CreateOrderModal({
                   const avail = Math.max(0, p.stock_quantity - p.reserved_quantity);
                   return (
                     <option key={p.id} value={p.id}>
-                      {p.name} (${parseFloat(p.price).toFixed(2)}) — {avail} available
+                      {p.name} (${parseFloat(p.price).toFixed(2)}) — {avail} on-hand
                     </option>
                   );
                 })}
@@ -231,12 +230,12 @@ export function CreateOrderModal({
 
             {/* Quantity Stepper */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
-                  Order Quantity
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  DISPATCH QUANTITY
                 </label>
-                <span style={{ fontSize: '11px', color: availableStock > 0 ? 'var(--text-muted)' : 'var(--danger-text)' }}>
-                  Available in stock: <strong>{availableStock} units</strong>
+                <span className="font-mono" style={{ fontSize: '11px', color: availableStock > 0 ? 'var(--text-muted)' : 'var(--danger-text)' }}>
+                  Available: <strong>{availableStock} units</strong>
                 </span>
               </div>
 
@@ -245,10 +244,10 @@ export function CreateOrderModal({
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   className="btn btn-secondary"
-                  style={{ width: '36px', height: '36px', padding: 0 }}
+                  style={{ width: '34px', height: '34px', padding: 0 }}
                   disabled={quantity <= 1}
                 >
-                  <Minus size={14} />
+                  <Minus size={13} />
                 </button>
                 <input
                   type="number"
@@ -257,15 +256,15 @@ export function CreateOrderModal({
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="form-input font-mono"
-                  style={{ textAlign: 'center', fontWeight: 600, height: '36px' }}
+                  style={{ textAlign: 'center', fontWeight: 700, height: '34px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
                   className="btn btn-secondary"
-                  style={{ width: '36px', height: '36px', padding: 0 }}
+                  style={{ width: '34px', height: '34px', padding: 0 }}
                 >
-                  <Plus size={14} />
+                  <Plus size={13} />
                 </button>
               </div>
 
@@ -273,7 +272,7 @@ export function CreateOrderModal({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '11px', color: 'var(--warning-text)' }}>
                   <AlertCircle size={12} />
                   <span>
-                    Warning: Requested quantity ({quantity}) exceeds available stock ({availableStock}). This order will be rejected.
+                    Warning: Requested {quantity} exceeds available stock ({availableStock}). Kafka inventory consumer will reject this dispatch.
                   </span>
                 </div>
               )}
@@ -284,15 +283,15 @@ export function CreateOrderModal({
               style={{
                 backgroundColor: 'var(--bg-subtle)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '14px 16px',
+                padding: '12px 14px',
                 border: '1px solid var(--border-default)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)', marginBottom: '5px' }}>
                 <span>Unit Price</span>
                 <span className="font-mono">${unitPrice.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)', marginBottom: '7px' }}>
                 <span>Quantity</span>
                 <span className="font-mono">× {quantity}</span>
               </div>
@@ -300,15 +299,15 @@ export function CreateOrderModal({
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '14px',
+                  fontSize: '13.5px',
                   fontWeight: 700,
                   color: 'var(--text-main)',
-                  paddingTop: '8px',
+                  paddingTop: '7px',
                   borderTop: '1px solid var(--border-default)',
                 }}
               >
-                <span>Estimated Total</span>
-                <span className="font-mono" style={{ color: 'var(--success-text)' }}>
+                <span>Estimated Value</span>
+                <span className="font-mono" style={{ color: 'var(--primary)' }}>
                   ${totalAmount}
                 </span>
               </div>
@@ -318,7 +317,7 @@ export function CreateOrderModal({
           {/* Footer Actions */}
           <div
             style={{
-              padding: '16px 24px',
+              padding: '14px 20px',
               borderTop: '1px solid var(--border-default)',
               display: 'flex',
               alignItems: 'center',
@@ -334,9 +333,9 @@ export function CreateOrderModal({
               type="submit"
               className="btn btn-primary btn-sm"
               disabled={isSubmitting || !productId}
-              style={{ minWidth: '110px' }}
+              style={{ minWidth: '120px' }}
             >
-              {isSubmitting ? 'Placing Order...' : 'Place Order'}
+              {isSubmitting ? 'Publishing...' : 'Dispatch Order'}
             </button>
           </div>
         </form>
