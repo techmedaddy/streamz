@@ -1,269 +1,175 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-  Server,
-  Layers,
-  Activity,
-  Zap,
-  ArrowUpRight,
-  CheckCircle2,
-  AlertCircle,
-  Database,
-  Radio,
-  Clock,
-  RefreshCw,
-} from 'lucide-react';
-import { Header } from '../components/Header';
-import { useTelemetryStream } from '../hooks/useTelemetryStream';
-import { TopologyCanvas } from '../components/topology/TopologyCanvas';
-import { LagHeatmapView } from '../components/lag/LagHeatmapView';
-import { TraceExplorerView } from '../components/traces/TraceExplorerView';
-import { ChaosControlView } from '../components/chaos/ChaosControlView';
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Navbar, DashboardView, ThemePalette } from '../components/Navbar';
+import { KpiMetrics } from '../components/KpiMetrics';
+import { InventoryTable } from '../components/InventoryTable';
+import { OrdersTable } from '../components/OrdersTable';
+import { OrderDetailDrawer } from '../components/OrderDetailDrawer';
+import { CreateOrderModal } from '../components/CreateOrderModal';
+import { useInventoryApi, Product, Order } from '../hooks/useInventoryApi';
 
 export default function DashboardHome() {
-  const [activeTab, setActiveTab] = useState<'topology' | 'lag' | 'traces' | 'chaos'>('topology');
+  const [currentView, setCurrentView] = useState<DashboardView>('overview');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [orderModalProduct, setOrderModalProduct] = useState<Product | null>(null);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<ThemePalette>('zinc');
+
+  // Initialize theme from document or localStorage (default: 'zinc' - Linear style, non-blue)
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('streamz_opaque_theme') as ThemePalette | null;
+    const themeToApply = savedTheme || 'zinc';
+    setCurrentTheme(themeToApply);
+    document.documentElement.setAttribute('data-theme', themeToApply);
+  }, []);
+
+  const handleSelectTheme = (theme: ThemePalette) => {
+    setCurrentTheme(theme);
+    localStorage.setItem('streamz_opaque_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  };
+
   const {
-    connected,
-    cluster,
-    lagSummaries,
-    recentSpans,
-    lastHeartbeat,
-    reconnectAttempts,
-  } = useTelemetryStream();
+    products,
+    orders,
+    loading,
+    orderPlacing,
+    servicesOnline,
+    refreshAll,
+    placeOrder,
+  } = useInventoryApi();
+
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    await refreshAll();
+    setTimeout(() => setIsManualRefreshing(false), 500);
+  };
+
+  const handleOpenOrderWithProduct = (product: Product) => {
+    setOrderModalProduct(product);
+    setIsNewOrderModalOpen(true);
+  };
+
+  const handleOpenGeneralOrderModal = () => {
+    setOrderModalProduct(null);
+    setIsNewOrderModalOpen(true);
+  };
+
+  // Find product for selected order drawer
+  const selectedOrderProduct = selectedOrder
+    ? products.find((p) => p.id === selectedOrder.product_id)
+    : undefined;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Status & Navigation Bar */}
-      <Header
-        connected={connected}
-        cluster={cluster}
-        lagSummaries={lagSummaries}
-        lastHeartbeat={lastHeartbeat}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)' }}>
+      {/* Top Navigation with Palette Selector */}
+      <Navbar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        onOpenNewOrder={handleOpenGeneralOrderModal}
+        onRefresh={handleRefresh}
+        isRefreshing={isManualRefreshing || loading}
+        servicesOnline={servicesOnline}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
       />
 
-      {/* Main Content Viewport */}
-      <main style={{ flex: 1, padding: '28px 32px', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
+      {/* Main Content Area */}
+      <main style={{ flex: 1, padding: '28px 24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
         {/* Connection Notice banner when offline */}
-        {!connected && (
+        {(!servicesOnline.orders || !servicesOnline.inventory) && (
           <div
-            className="glass-panel"
             style={{
-              padding: '12px 20px',
+              padding: '12px 18px',
               marginBottom: '24px',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              borderColor: 'rgba(239, 68, 68, 0.3)',
+              backgroundColor: 'var(--danger-subtle)',
+              border: '1px solid var(--danger-border)',
+              borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              fontSize: '13px',
+              color: 'var(--danger-text)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <AlertCircle size={18} color="#f87171" />
-              <span style={{ fontSize: '13px', color: '#f87171', fontWeight: 500 }}>
-                Disconnected from Observability WebSocket telemetry stream. Auto-reconnecting (Attempt {reconnectAttempts})...
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} />
+              <span>
+                Microservices notice: {!servicesOnline.orders && 'Order Service is offline. '}
+                {!servicesOnline.inventory && 'Inventory Service is offline. '}
+                Run <code className="font-mono">npm run dev</code> or <code className="font-mono">npm run docker:up</code>.
               </span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              Target: ws://localhost:3004/ws/telemetry
-            </span>
+            <button
+              onClick={handleRefresh}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '11px', padding: '4px 8px' }}
+            >
+              <RefreshCw size={11} />
+              Retry
+            </button>
           </div>
         )}
 
-        {/* TAB 1: CLUSTER TOPOLOGY */}
-        {activeTab === 'topology' && (
-          <section id="view-topology">
-            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>
-                  Apache Kafka Cluster & Broker Topology
-                </h1>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  KRaft quorum consensus, partition distribution, leader brokers, and in-sync replica sets.
-                </p>
-              </div>
-              <span className="badge badge-indigo">
-                Cluster ID: {cluster?.clusterId || 'Detecting...'}
-              </span>
-            </div>
+        {/* Top Key Metric Cards */}
+        <KpiMetrics products={products} orders={orders} />
 
-            {/* Interactive Live Topology Flow Canvas */}
-            <div style={{ marginBottom: '28px' }}>
-              <TopologyCanvas
-                cluster={cluster}
-                lagSummaries={lagSummaries}
-                recentSpans={recentSpans}
-              />
-            </div>
-
-            {/* Broker Nodes Grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-                gap: '20px',
-                marginBottom: '28px',
-              }}
-            >
-              {(cluster?.brokers || []).map((broker) => (
-                <div key={broker.nodeId} className="glass-panel" style={{ padding: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '10px',
-                          background: 'rgba(99, 102, 241, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1px solid rgba(99, 102, 241, 0.3)',
-                        }}
-                      >
-                        <Server size={20} color="#818cf8" />
-                      </div>
-                      <div>
-                        <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff' }}>
-                          Broker Node {broker.nodeId}
-                        </h2>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          {broker.host}:{broker.port}
-                        </span>
-                      </div>
-                    </div>
-                    {broker.isController ? (
-                      <span className="badge badge-emerald">Active Controller</span>
-                    ) : (
-                      <span className="badge badge-indigo">Follower</span>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                      padding: '12px',
-                      background: 'rgba(0, 0, 0, 0.25)',
-                      borderRadius: '8px',
-                      marginBottom: '16px',
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Role</span>
-                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#ffffff' }}>KRaft Controller & Broker</p>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Quorum State</span>
-                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#34d399' }}>Healthy (Leader)</p>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>Status</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#34d399', fontWeight: 600 }}>
-                      <span className="pulse-emerald" style={{ width: '6px', height: '6px' }} />
-                      Online & Accepting Connections
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Topics & Partition Layout Table */}
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Layers size={18} color="#22d3ee" />
-                  <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff' }}>
-                    Registered Topics & Partition Allocation
-                  </h2>
-                </div>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Total {cluster?.topics.length || 0} Topics
-                </span>
-              </div>
-
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '12px 16px' }}>Topic Name</th>
-                      <th style={{ padding: '12px 16px' }}>Type</th>
-                      <th style={{ padding: '12px 16px' }}>Partitions</th>
-                      <th style={{ padding: '12px 16px' }}>Leader Broker</th>
-                      <th style={{ padding: '12px 16px' }}>In-Sync Replicas (ISR)</th>
-                      <th style={{ padding: '12px 16px' }}>Log-End High Watermark</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(cluster?.topics || []).map((t) => (
-                      <tr
-                        key={t.name}
-                        style={{
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                          transition: 'background 0.15s ease',
-                        }}
-                      >
-                        <td style={{ padding: '14px 16px', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
-                          <span style={{ color: t.name.startsWith('__') ? 'var(--text-dim)' : '#ffffff' }}>
-                            {t.name}
-                          </span>
-                        </td>
-                        <td style={{ padding: '14px 16px' }}>
-                          {t.isInternal ? (
-                            <span className="badge badge-amber">Internal</span>
-                          ) : (
-                            <span className="badge badge-cyan">Application</span>
-                          )}
-                        </td>
-                        <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)' }}>
-                          {t.partitionCount} Partitions
-                        </td>
-                        <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)' }}>
-                          Node {t.partitions[0]?.leader ?? 1}
-                        </td>
-                        <td style={{ padding: '14px 16px' }}>
-                          <span className="badge badge-emerald">
-                            [{t.partitions[0]?.isr.join(', ') ?? '1'}] 100% In-Sync
-                          </span>
-                        </td>
-                        <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>
-                          {t.partitions.map((p) => `P${p.partitionId}:${p.highWatermark || '0'}`).join(' | ')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+        {/* Tab 1: OVERVIEW */}
+        {currentView === 'overview' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <InventoryTable
+              products={products.slice(0, 5)}
+              onOrderProduct={handleOpenOrderWithProduct}
+              isLoading={loading}
+            />
+            <OrdersTable
+              orders={orders.slice(0, 10)}
+              products={products}
+              onSelectOrder={setSelectedOrder}
+              isLoading={loading}
+            />
+          </div>
         )}
 
-        {/* TAB 2: CONSUMER GROUP LAG */}
-        {activeTab === 'lag' && (
-          <section id="view-lag">
-            <LagHeatmapView lagSummaries={lagSummaries} cluster={cluster} />
-          </section>
+        {/* Tab 2: INVENTORY STOCK */}
+        {currentView === 'inventory' && (
+          <InventoryTable
+            products={products}
+            onOrderProduct={handleOpenOrderWithProduct}
+            isLoading={loading}
+          />
         )}
 
-        {/* TAB 3: LIVE TRACES */}
-        {activeTab === 'traces' && (
-          <section id="view-traces">
-            <TraceExplorerView recentSpans={recentSpans} />
-          </section>
-        )}
-
-        {/* TAB 4: CHAOS CONTROL */}
-        {activeTab === 'chaos' && (
-          <section id="view-chaos">
-            <ChaosControlView />
-          </section>
+        {/* Tab 3: ORDERS LEDGER */}
+        {currentView === 'orders' && (
+          <OrdersTable
+            orders={orders}
+            products={products}
+            onSelectOrder={setSelectedOrder}
+            isLoading={loading}
+          />
         )}
       </main>
+
+      {/* Slide-over Order Detail Drawer */}
+      <OrderDetailDrawer
+        order={selectedOrder}
+        product={selectedOrderProduct}
+        onClose={() => setSelectedOrder(null)}
+      />
+
+      {/* Place Order Modal */}
+      <CreateOrderModal
+        isOpen={isNewOrderModalOpen}
+        onClose={() => setIsNewOrderModalOpen(false)}
+        products={products}
+        initialProduct={orderModalProduct}
+        onSubmit={placeOrder}
+        isSubmitting={orderPlacing}
+      />
     </div>
   );
 }

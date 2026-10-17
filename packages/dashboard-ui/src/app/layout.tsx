@@ -3,9 +3,8 @@ import React from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Streamz — Real-Time Kafka Observability & Event Choreography Console',
-  description:
-    'Deep-dive Kafka internals observability dashboard with real-time partition lag heatmaps, distributed trace waterfalls, cluster topology, and chaos failure injection.',
+  title: 'Streamz — Inventory & Order Operations',
+  description: 'Real-time inventory stock management and order processing operations platform.',
 };
 
 export default function RootLayout({
