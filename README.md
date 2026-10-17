@@ -6,12 +6,12 @@
 
 <p align="center">
   <a href="#quickstart-in-60-seconds"><img src="https://img.shields.io/badge/ci-passing-10b981?style=flat-square&logo=githubactions&logoColor=white" alt="CI Status" /></a>
-  <a href="https://kafka.apache.org/"><img src="https://img.shields.io/badge/kafka-KRaft_v3.8+-3b82f6?style=flat-square&logo=apachekafka&logoColor=white" alt="Kafka KRaft" /></a>
+  <a href="https://kafka.apache.org/"><img src="https://img.shields.io/badge/kafka-KRaft_v3.8+-06b6d4?style=flat-square&logo=apachekafka&logoColor=white" alt="Kafka KRaft" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=_20.0.0-22c55e?style=flat-square&logo=node.js&logoColor=white" alt="Node Version" /></a>
   <a href="https://fastify.io/"><img src="https://img.shields.io/badge/fastify-v5.0-000000?style=flat-square&logo=fastify&logoColor=white" alt="Fastify" /></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/postgresql-15+-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square" alt="License" /></a>
-  <a href="http://localhost:3000/docs"><img src="https://img.shields.io/badge/docs-Kafka_Masterclass-10b981?style=flat-square&logo=gitbook&logoColor=white" alt="Documentation" /></a>
+  <a href="http://localhost:3000/docs"><img src="https://img.shields.io/badge/docs-Kafka_Masterclass-8b5cf6?style=flat-square&logo=gitbook&logoColor=white" alt="Documentation" /></a>
 </p>
 
 ---

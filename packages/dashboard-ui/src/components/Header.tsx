@@ -66,15 +66,15 @@ export function Header({
               width: '28px',
               height: '28px',
               borderRadius: '6px',
-              backgroundColor: '#111827',
-              border: '1px solid #1f2937',
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #1e293b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)',
+              boxShadow: '0 0 10px rgba(6, 182, 212, 0.25)',
             }}
           >
-            <StreamzLogo size={16} />
+            <StreamzLogo size={18} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
