@@ -2,7 +2,6 @@
 
 import React from 'react';
 import {
-  Boxes,
   Search,
   Plus,
   RefreshCw,
@@ -11,6 +10,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
+import { StreamzLogo } from './StreamzLogo';
 
 interface HeaderProps {
   onOpenCommandPalette: () => void;
@@ -50,25 +50,35 @@ export function Header({
           justifyContent: 'space-between',
         }}
       >
-        {/* Left: Brand / Title in Nextra Style */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Left: Brand / Title in Nextra Style — Clickable, redirects to '/' */}
+        <Link
+          href="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+        >
           <div
             style={{
               width: '28px',
               height: '28px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--primary)',
+              borderRadius: '6px',
+              backgroundColor: '#111827',
+              border: '1px solid #1f2937',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
+              boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)',
             }}
           >
-            <Boxes size={16} />
+            <StreamzLogo size={16} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
-              Streamz Engineering
+            <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+              streamz
             </span>
             <span
               style={{
@@ -85,7 +95,7 @@ export function Header({
               KAFKA KRaft
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Center: Command Palette Trigger Button (TrackOpenSource style) */}
         <button

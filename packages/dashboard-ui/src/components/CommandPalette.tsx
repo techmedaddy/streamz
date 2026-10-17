@@ -212,7 +212,7 @@ export function CommandPalette({
                 <button
                   key={d.id}
                   onClick={() => {
-                    onSelectSection(d.id as NavSection);
+                    window.location.href = `/docs?chapter=${d.id}`;
                     onClose();
                   }}
                   className="btn btn-ghost"

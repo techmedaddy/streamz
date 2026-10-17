@@ -11,12 +11,7 @@ import {
   Server,
   Zap,
   Hash,
-  GraduationCap,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
-import Link from 'next/link';
-import { KAFKA_DOCS } from './docs/kafkaContent';
 
 export type NavSection =
   | 'overview'
@@ -26,13 +21,6 @@ export type NavSection =
   | 'topics'
   | 'topology'
   | 'contracts'
-  | 'kafka-foundations'
-  | 'kafka-topics-partitions'
-  | 'kafka-kraft-consensus'
-  | 'kafka-producers'
-  | 'kafka-consumers'
-  | 'kafka-enterprise-patterns'
-  | 'streamz-architecture'
   | 'specs'
   | 'api';
 
@@ -49,19 +37,17 @@ export function Sidebar({
   skuCount,
   orderCount,
 }: SidebarProps) {
-  const isDocSection = (s: string) => s.startsWith('kafka-') || s === 'streamz-architecture';
-
   return (
     <aside
       style={{
-        width: '256px',
+        width: '240px',
         flexShrink: 0,
         backgroundColor: 'var(--bg-page)',
         borderRight: '1px solid var(--border-default)',
         padding: '20px 14px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '22px',
+        gap: '24px',
         height: 'calc(100vh - 56px)',
         position: 'sticky',
         top: '56px',
@@ -312,83 +298,7 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* ── Category 3: KAFKA MASTERCLASS (DOCS) ────────────────────── */}
-      <div>
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            color: 'var(--text-muted)',
-            marginBottom: '8px',
-            paddingLeft: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Kafka Masterclass</span>
-          </div>
-          <Link
-            href="/docs"
-            style={{
-              fontSize: '10px',
-              color: 'var(--emerald-text)',
-              textDecoration: 'none',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-            }}
-          >
-            <span>PORTAL</span>
-            <ExternalLink size={10} />
-          </Link>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {KAFKA_DOCS.map((doc) => {
-            return (
-              <Link
-                key={doc.id}
-                href={`/docs?chapter=${doc.id}`}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '6px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text-secondary)',
-                  textDecoration: 'none',
-                  fontSize: '12px',
-                  lineHeight: 1.35,
-                  transition: 'background-color 0.12s ease',
-                }}
-                className="hover:bg-neutral-100"
-              >
-                <span
-                  className="font-mono"
-                  style={{
-                    fontSize: '10px',
-                    color: 'var(--text-muted)',
-                    opacity: 0.8,
-                    marginTop: '1px',
-                  }}
-                >
-                  {doc.number}
-                </span>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {doc.title}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Category 4: SPECIFICATIONS ──────────────────────────────── */}
+      {/* ── Category 3: SPECIFICATIONS ──────────────────────────────── */}
       <div>
         <div
           style={{

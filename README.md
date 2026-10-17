@@ -1,4 +1,4 @@
-# Streamz ⚡ — Distributed Inventory & Order Choreography on Apache Kafka KRaft
+# streamz ⚡ — Distributed Inventory & Order Choreography on Apache Kafka KRaft
 
 <p align="center">
   <img src="./assets/streamz-banner.png" alt="Streamz — Distributed Inventory & Kafka KRaft Engine" width="100%" />

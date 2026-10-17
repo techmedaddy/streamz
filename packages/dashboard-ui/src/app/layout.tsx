@@ -3,8 +3,11 @@ import React from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Streamz — Inventory & Order Operations',
+  title: 'streamz — Inventory & Order Operations',
   description: 'Real-time inventory stock management and order processing operations platform.',
+  icons: {
+    icon: '/logo.svg',
+  },
 };
 
 export default function RootLayout({
