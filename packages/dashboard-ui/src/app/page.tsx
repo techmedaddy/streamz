@@ -17,7 +17,7 @@ import { TopicInspector } from '../components/explorer/TopicInspector';
 
 const TOPOLOGY_MERMAID = `graph TD
     Client[Client Dashboard] -->|HTTP POST /orders| OS[Order Service<br/>Port 3001]
-    OS -->|Topic: orders<br/>Event: OrderCreated| Kafka[(Apache Kafka KRaft Cluster<br/>Port 9092)]
+    OS -->|Topic: orders<br/>Event: OrderCreated| Kafka[(Apache Kafka KRaft Cluster<br/>Port 9094)]
     Kafka -->|Topic: orders| IS[Inventory Service<br/>Port 3002]
     IS -->|Topic: inventory-events<br/>InventoryReserved / Rejected| Kafka
     Kafka -->|Topic: inventory-events| OS

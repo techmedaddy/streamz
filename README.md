@@ -54,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000) for the operations console o
 ```mermaid
 graph LR
     UI["Operations UI<br/>(:3000)"] --> OS["Order Service<br/>(:3001)"]
-    OS -->|orders| K["Kafka KRaft<br/>(:9092)"]
+    OS -->|orders| K["Kafka KRaft<br/>(:9094)"]
     K -->|inventory-workers| IS["Inventory Service<br/>(:3002)"]
     IS -->|inventory-events| K
     K -->|order-workers| OS
